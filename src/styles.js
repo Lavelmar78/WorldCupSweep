@@ -1,0 +1,253 @@
+const s = {
+  // Layout
+  root: {
+    minHeight: '100vh',
+    background: 'linear-gradient(160deg, #0b1a2e 0%, #0d2640 60%, #091520 100%)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '0 12px 60px',
+    fontFamily: "'Georgia', 'Times New Roman', serif",
+  },
+
+  // Header
+  appHeader: {
+    width: '100%',
+    maxWidth: 520,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '20px 0 12px',
+    borderBottom: '1px solid rgba(255,215,0,0.12)',
+    marginBottom: 16,
+  },
+  appTitle: {
+    color: '#FFD700',
+    fontSize: 22,
+    fontWeight: 700,
+    letterSpacing: '-0.5px',
+  },
+  appSub: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  adminToggleBtn: {
+    background: 'rgba(255,215,0,0.08)',
+    border: '1px solid rgba(255,215,0,0.2)',
+    color: 'rgba(255,215,0,0.7)',
+    borderRadius: 8,
+    padding: '7px 12px',
+    cursor: 'pointer',
+    fontSize: 12,
+    fontFamily: 'Georgia, serif',
+  },
+
+  // Tabs
+  tabs: {
+    display: 'flex',
+    gap: 6,
+    marginBottom: 16,
+    width: '100%',
+    maxWidth: 520,
+  },
+  tab: {
+    flex: 1,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    color: 'rgba(255,255,255,0.45)',
+    borderRadius: 10,
+    padding: '10px 4px',
+    cursor: 'pointer',
+    fontSize: 12,
+    fontFamily: 'Georgia, serif',
+    transition: 'all 0.15s',
+  },
+  tabActive: {
+    background: 'rgba(255,215,0,0.1)',
+    border: '1px solid rgba(255,215,0,0.35)',
+    color: '#FFD700',
+  },
+
+  // Content
+  mainContent: {
+    width: '100%',
+    maxWidth: 520,
+  },
+  panel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+  },
+
+  // Leaderboard
+  leaderRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.07)',
+    borderRadius: 12,
+    padding: '13px 16px',
+    transition: 'border-color 0.2s',
+  },
+  leaderFirst: {
+    background: 'rgba(255,215,0,0.07)',
+    border: '1px solid rgba(255,215,0,0.22)',
+  },
+  leaderRank: { fontSize: 20, width: 28 },
+  leaderInfo: { flex: 1 },
+  leaderName: { color: '#fff', fontWeight: 700, display: 'block', fontSize: 15 },
+  leaderFlags: { fontSize: 17, display: 'block', marginTop: 3, letterSpacing: 2 },
+  leaderScore: { color: '#FFD700', fontWeight: 700, fontSize: 20 },
+  ptsLabel: { color: 'rgba(255,215,0,0.5)', fontSize: 12, fontWeight: 400 },
+
+  // Team card
+  teamCard: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.07)',
+    borderRadius: 12,
+    padding: 14,
+  },
+  teamCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  teamPlayerName: { color: '#fff', fontWeight: 700, fontSize: 15 },
+  teamLine: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '5px 0',
+    borderTop: '1px solid rgba(255,255,255,0.05)',
+  },
+  teamLineName: { color: 'rgba(255,255,255,0.7)', fontSize: 13, flex: 1 },
+  groupRes: { color: 'rgba(255,255,255,0.3)', fontSize: 11, letterSpacing: 2 },
+  teamLinePts: { color: 'rgba(255,215,0,0.8)', fontSize: 13, fontWeight: 700 },
+
+  // Results entry
+  sectionLabel: {
+    color: 'rgba(255,215,0,0.55)',
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: 2.5,
+    marginTop: 10,
+    marginBottom: 2,
+    paddingLeft: 2,
+  },
+  resultRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.05)',
+    borderRadius: 10,
+    padding: '7px 10px',
+  },
+  resultTeam: { color: 'rgba(255,255,255,0.75)', fontSize: 12, flex: 1 },
+  resultBadges: { display: 'flex', gap: 4 },
+  badge: {
+    width: 24, height: 24, borderRadius: 6,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 10, fontWeight: 700,
+  },
+  badgeW: { background: 'rgba(80,200,80,0.2)', color: '#6ddc6d', border: '1px solid rgba(80,200,80,0.35)' },
+  badgeD: { background: 'rgba(255,200,0,0.18)', color: '#FFD700', border: '1px solid rgba(255,200,0,0.35)' },
+  badgeL: { background: 'rgba(255,80,80,0.18)', color: '#ff6b6b', border: '1px solid rgba(255,80,80,0.3)' },
+  badgeEmpty: { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.08)' },
+  resultBtns: { display: 'flex', gap: 3 },
+  miniBtn: {
+    border: 'none', borderRadius: 6, padding: '4px 7px',
+    cursor: 'pointer', fontSize: 10, fontWeight: 700,
+    fontFamily: 'Georgia, serif',
+  },
+  btnW: { background: 'rgba(80,200,80,0.18)', color: '#6ddc6d' },
+  btnD: { background: 'rgba(255,200,0,0.15)', color: '#FFD700' },
+  btnL: { background: 'rgba(255,80,80,0.15)', color: '#ff6b6b' },
+  btnUndo: { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.45)' },
+
+  // Admin
+  adminHeader: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 16,
+  },
+  adminBadge: {
+    background: 'rgba(255,215,0,0.1)',
+    border: '1px solid rgba(255,215,0,0.25)',
+    color: '#FFD700', borderRadius: 8, padding: '5px 10px', fontSize: 12,
+  },
+  logoutBtn: {
+    background: 'transparent', border: '1px solid rgba(255,255,255,0.12)',
+    color: 'rgba(255,255,255,0.4)', borderRadius: 8, padding: '5px 10px',
+    cursor: 'pointer', fontSize: 12, fontFamily: 'Georgia, serif',
+  },
+  playerRow: { display: 'flex', alignItems: 'center', gap: 8 },
+  playerNum: { color: '#FFD700', fontWeight: 700, width: 20, textAlign: 'right', fontSize: 13 },
+  input: {
+    flex: 1, background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,215,0,0.2)',
+    borderRadius: 10, padding: '10px 14px',
+    color: '#fff', fontSize: 15, outline: 'none',
+    fontFamily: 'Georgia, serif',
+  },
+  inputError: { borderColor: 'rgba(255,80,80,0.5)' },
+  removeBtn: {
+    background: 'rgba(255,80,80,0.1)', border: '1px solid rgba(255,80,80,0.25)',
+    color: '#ff6b6b', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 12,
+  },
+  ghostBtn: {
+    background: 'transparent',
+    border: '1px dashed rgba(255,215,0,0.3)',
+    color: '#FFD700', borderRadius: 10, padding: '9px 20px',
+    cursor: 'pointer', fontSize: 13, width: '100%',
+    fontFamily: 'Georgia, serif',
+  },
+  primaryBtn: {
+    background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+    border: 'none', borderRadius: 12, padding: '13px 32px',
+    color: '#0a1628', fontWeight: 700, fontSize: 15,
+    cursor: 'pointer', width: '100%',
+    fontFamily: 'Georgia, serif',
+  },
+  drawSummaryRow: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: 10, padding: '10px 14px',
+  },
+  drawPlayerName: { color: '#fff', fontWeight: 700, fontSize: 14 },
+  drawTeamFlags: { fontSize: 18, letterSpacing: 4 },
+  confirmBox: {
+    background: 'rgba(255,80,80,0.07)',
+    border: '1px solid rgba(255,80,80,0.2)',
+    borderRadius: 10, padding: 14,
+  },
+  confirmText: { color: 'rgba(255,255,255,0.7)', fontSize: 13, margin: '0 0 10px' },
+
+  // Login
+  overlay: {
+    position: 'fixed', inset: 0,
+    background: 'rgba(10,22,40,0.92)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 100, padding: 20,
+  },
+  loginCard: {
+    background: 'linear-gradient(160deg, #0d2640, #0b1a2e)',
+    border: '1px solid rgba(255,215,0,0.2)',
+    borderRadius: 20, padding: '36px 28px',
+    width: '100%', maxWidth: 340, textAlign: 'center',
+  },
+  lockIcon: { fontSize: 44, marginBottom: 8 },
+  loginTitle: { color: '#fff', fontSize: 22, fontWeight: 700, margin: '0 0 6px' },
+  loginSub: { color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: '0 0 24px' },
+  errorMsg: { color: '#ff6b6b', fontSize: 12, margin: '6px 0 0' },
+  shake: { animation: 'shake 0.4s' },
+
+  // Empty
+  empty: { padding: '40px 0', textAlign: 'center' },
+  emptyText: { color: 'rgba(255,255,255,0.3)', fontSize: 14 },
+}
+
+export default s
