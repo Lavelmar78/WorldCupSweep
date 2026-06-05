@@ -24,14 +24,14 @@ export default function AdminPanel({ assignments, onLogout }) {
     let result = {}
     let attempts = 0
 
-    while (attempts < 100) {
-      const shuffledPots = potArrays.map(pot => shuffle([...pot]))
+    while (attempts < 200) {
       result = {}
       const usedCombos = new Set()
       let hasDuplicate = false
 
       for (let i = 0; i < valid.length; i++) {
-        const teams = shuffledPots.map(pot => pot[i % pot.length])
+        // Pick one random team from each pot independently
+        const teams = potArrays.map(pot => pot[Math.floor(Math.random() * pot.length)])
         const comboKey = teams.map(t => t.name).join('|')
         if (usedCombos.has(comboKey)) {
           hasDuplicate = true
