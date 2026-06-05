@@ -129,7 +129,7 @@ function KnockoutRow({ team, tp, round }) {
 }
 
 export default function ResultsEntry({ teamPoints }) {
-  const knockout = ['r16', 'qf', 'sf', 'final']
+  const knockout = ['r32', 'r16', 'qf', 'sf', 'final']
 
   return (
     <div style={s.panel}>
