@@ -1,43 +1,59 @@
 export const POTS = {
   "Pot 1": [
-    { name: "Argentina", flag: "🇦🇷" },
     { name: "France", flag: "🇫🇷" },
-    { name: "England", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-    { name: "Brazil", flag: "🇧🇷" },
-    { name: "Portugal", flag: "🇵🇹" },
     { name: "Spain", flag: "🇪🇸" },
-    { name: "Belgium", flag: "🇧🇪" },
+    { name: "Argentina", flag: "🇦🇷" },
+    { name: "England", flag: "🏴󠁧󠁢" },
+    { name: "Portugal", flag: "🇵🇹" },
+    { name: "Brazil", flag: "🇧🇷" },
     { name: "Netherlands", flag: "🇳🇱" },
-  ],
-  "Pot 2": [
+    { name: "Morocco", flag: "🇲🇦" },
+    { name: "Belgium", flag: "🇧🇪" },
     { name: "Germany", flag: "🇩🇪" },
     { name: "Croatia", flag: "🇭🇷" },
+    { name: "Colombia", flag: "🇨🇴" },
+  ],
+  "Pot 2": [
+    { name: "Senegal", flag: "🇸🇳" },
+    { name: "Mexico", flag: "🇲🇽" },
     { name: "USA", flag: "🇺🇸" },
     { name: "Uruguay", flag: "🇺🇾" },
-    { name: "Mexico", flag: "🇲🇽" },
+    { name: "Japan", flag: "🇯🇵" },
     { name: "Switzerland", flag: "🇨🇭" },
-    { name: "Denmark", flag: "🇩🇰" },
-    { name: "Senegal", flag: "🇸🇳" },
+    { name: "Iran", flag: "🇮🇷" },
+    { name: "Austria", flag: "🇦🇹" },
+    { name: "Ecuador", flag: "🇪🇨" },
+    { name: "South Korea", flag: "🇰🇷" },
+    { name: "Australia", flag: "🇦🇺" },
+    { name: "Egypt", flag: "🇪🇬" },
   ],
   "Pot 3": [
-    { name: "Poland", flag: "🇵🇱" },
-    { name: "Japan", flag: "🇯🇵" },
-    { name: "Wales", flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿" },
-    { name: "Ecuador", flag: "🇪🇨" },
-    { name: "Morocco", flag: "🇲🇦" },
     { name: "Canada", flag: "🇨🇦" },
+    { name: "Ivory Coast", flag: "🇨🇮" },
+    { name: "Qatar", flag: "🇶🇦" },
+    { name: "Algeria", flag: "🇩🇿" },
+    { name: "Sweden", flag: "🇸🇪" },
+    { name: "Paraguay", flag: "🇵🇾" },
+    { name: "Czechia", flag: "🇨🇿" },
+    { name: "Türkiye", flag: "🇹🇷" },
+    { name: "Scotland", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+    { name: "DR Congo", flag: "🇨🇩" },
     { name: "Tunisia", flag: "🇹🇳" },
-    { name: "South Korea", flag: "🇰🇷" },
+    { name: "Norway", flag: "🇳🇴" },
   ],
   "Pot 4": [
+    { name: "Uzbekistan", flag: "🇺🇿" },
+    { name: "Bosnia & Herzegovina", flag: "🇧🇦" },
+    { name: "Panama", flag: "🇵🇦" },
+    { name: "Iraq", flag: "🇮🇶" },
+    { name: "South Africa", flag: "🇿🇦" },
     { name: "Saudi Arabia", flag: "🇸🇦" },
-    { name: "Costa Rica", flag: "🇨🇷" },
-    { name: "Iran", flag: "🇮🇷" },
+    { name: "Jordan", flag: "🇯" },
+    { name: "Cape Verde", flag: "🇨🇻" },
     { name: "Ghana", flag: "🇬🇭" },
-    { name: "Qatar", flag: "🇶🇦" },
-    { name: "Cameroon", flag: "🇨🇲" },
-    { name: "Australia", flag: "🇦🇺" },
-    { name: "Serbia", flag: "🇷🇸" },
+    { name: "Haiti", flag: "🇭" },
+    { name: "Curaçao", flag: "🇨🇼" },
+    { name: "New Zealand", flag: "🇳🇿" },
   ],
 }
 
@@ -45,6 +61,7 @@ export const ALL_TEAMS = Object.values(POTS).flat()
 
 export const ROUND_POINTS = {
   group: { W: 2, D: 1, L: 0 },
+  r32:   { W: 2 },
   r16:   { W: 3 },
   qf:    { W: 4 },
   sf:    { W: 5 },
@@ -53,6 +70,7 @@ export const ROUND_POINTS = {
 
 export const ROUND_LABELS = {
   group: "Group Stage",
+  r32:   "Round of 32",
   r16:   "Round of 16",
   qf:    "Quarter-Final",
   sf:    "Semi-Final",
@@ -72,6 +90,7 @@ export function calcTeamPoints(tp) {
   if (!tp) return 0
   let s = 0
   ;(tp.group || []).forEach(r => { s += ROUND_POINTS.group[r.result] || 0 })
+  if (tp.r32?.result   === 'W') s += ROUND_POINTS.r32.W
   if (tp.r16?.result   === 'W') s += ROUND_POINTS.r16.W
   if (tp.qf?.result    === 'W') s += ROUND_POINTS.qf.W
   if (tp.sf?.result    === 'W') s += ROUND_POINTS.sf.W
@@ -86,7 +105,7 @@ export function calcTeamGoals(tp) {
     scored += r.scored || 0
     conceded += r.conceded || 0
   })
-  ;['r16', 'qf', 'sf', 'final'].forEach(round => {
+  ;['r32', 'r16', 'qf', 'sf', 'final'].forEach(round => {
     if (tp[round]) {
       scored += tp[round].scored || 0
       conceded += tp[round].conceded || 0
