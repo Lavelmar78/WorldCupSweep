@@ -19,10 +19,16 @@ export default function AdminPanel({ assignments, onLogout }) {
     const valid = players.filter(p => p.trim())
     if (valid.length < 2) return
     setDrawing(true)
-    const pots = Object.values(POTS).map(pot => shuffle(pot))
+    const pots = Object.values(POTS).map(pot => shuffle([...pot]))
+    const usedPerPot = pots.map(() => new Set())
     const result = {}
-    valid.forEach((player, i) => {
-      result[player] = pots.map(pot => pot[i % pot.length])
+    valid.forEach((player) => {
+      result[player] = pots.map((pot, pi) => {
+        const available = pot.filter(t => !usedPerPot[pi].has(t.name))
+        const team = available.length > 0 ? available[0] : pot[0]
+        usedPerPot[pi].add(team.name)
+        return team
+      })
     })
     await set(ref(db, 'assignments'), result)
     const initPoints = {}
