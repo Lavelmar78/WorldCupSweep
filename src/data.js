@@ -71,10 +71,26 @@ export function shuffle(arr) {
 export function calcTeamPoints(tp) {
   if (!tp) return 0
   let s = 0
-  ;(tp.group || []).forEach(r => { s += ROUND_POINTS.group[r] || 0 })
-  if (tp.r16   === 'W') s += ROUND_POINTS.r16.W
-  if (tp.qf    === 'W') s += ROUND_POINTS.qf.W
-  if (tp.sf    === 'W') s += ROUND_POINTS.sf.W
-  if (tp.final === 'W') s += ROUND_POINTS.final.W
+  ;(tp.group || []).forEach(r => { s += ROUND_POINTS.group[r.result] || 0 })
+  if (tp.r16?.result   === 'W') s += ROUND_POINTS.r16.W
+  if (tp.qf?.result    === 'W') s += ROUND_POINTS.qf.W
+  if (tp.sf?.result    === 'W') s += ROUND_POINTS.sf.W
+  if (tp.final?.result === 'W') s += ROUND_POINTS.final.W
   return s
+}
+
+export function calcTeamGoals(tp) {
+  if (!tp) return { scored: 0, conceded: 0 }
+  let scored = 0, conceded = 0
+  ;(tp.group || []).forEach(r => {
+    scored += r.scored || 0
+    conceded += r.conceded || 0
+  })
+  ;['r16', 'qf', 'sf', 'final'].forEach(round => {
+    if (tp[round]) {
+      scored += tp[round].scored || 0
+      conceded += tp[round].conceded || 0
+    }
+  })
+  return { scored, conceded }
 }
