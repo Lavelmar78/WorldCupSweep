@@ -19,20 +19,35 @@ export default function AdminPanel({ assignments, onLogout }) {
     const valid = players.filter(p => p.trim())
     if (valid.length < 2) return
     setDrawing(true)
-    const pots = Object.values(POTS).map(pot => shuffle([...pot]))
-    const usedPerPot = pots.map(() => new Set())
-    const result = {}
-    valid.forEach((player) => {
-      result[player] = pots.map((pot, pi) => {
-        const available = pot.filter(t => !usedPerPot[pi].has(t.name))
-        const team = available.length > 0 ? available[0] : pot[0]
-        usedPerPot[pi].add(team.name)
-        return team
-      })
-    })
+
+    const potArrays = Object.values(POTS)
+    let result = {}
+    let attempts = 0
+
+    while (attempts < 100) {
+      const shuffledPots = potArrays.map(pot => shuffle([...pot]))
+      result = {}
+      const usedCombos = new Set()
+      let hasDuplicate = false
+
+      for (let i = 0; i < valid.length; i++) {
+        const teams = shuffledPots.map(pot => pot[i % pot.length])
+        const comboKey = teams.map(t => t.name).join('|')
+        if (usedCombos.has(comboKey)) {
+          hasDuplicate = true
+          break
+        }
+        usedCombos.add(comboKey)
+        result[valid[i]] = teams
+      }
+
+      if (!hasDuplicate) break
+      attempts++
+    }
+
     await set(ref(db, 'assignments'), result)
     const initPoints = {}
-    Object.values(POTS).flat().forEach(t => {
+    potArrays.flat().forEach(t => {
       initPoints[t.name] = { group: [] }
     })
     await set(ref(db, 'teamPoints'), initPoints)
