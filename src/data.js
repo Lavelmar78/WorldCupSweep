@@ -3,7 +3,7 @@ export const POTS = {
     { name: "France", flag: "🇫🇷" },
     { name: "Spain", flag: "🇪🇸" },
     { name: "Argentina", flag: "🇦🇷" },
-    { name: "England", flag: "🏴󠁧󠁢" },
+    { name: "England", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
     { name: "Portugal", flag: "🇵🇹" },
     { name: "Brazil", flag: "🇧🇷" },
     { name: "Netherlands", flag: "🇳🇱" },
