@@ -8,6 +8,7 @@ export default function AdminPanel({ assignments, onLogout }) {
   const [players, setPlayers] = useState([''])
   const [drawing, setDrawing] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [drawError, setDrawError] = useState('')
 
   function addPlayer() { setPlayers([...players, '']) }
   function removePlayer(i) { setPlayers(players.filter((_, idx) => idx !== i)) }
@@ -19,44 +20,77 @@ export default function AdminPanel({ assignments, onLogout }) {
     const valid = players.filter(p => p.trim())
     if (valid.length < 2) return
     setDrawing(true)
+    setDrawError('')
 
     const potArrays = Object.values(POTS)
     let result = {}
     let attempts = 0
+    let success = false
 
-    while (attempts < 200) {
+    while (attempts < 500 && !success) {
       result = {}
       const usedCombos = new Set()
-      let hasDuplicate = false
+      let failed = false
 
       for (let i = 0; i < valid.length; i++) {
-        // Pick one random team from each pot independently
-        const teams = potArrays.map(pot => pot[Math.floor(Math.random() * pot.length)])
-        const comboKey = teams.map(t => t.name).join('|')
-        if (usedCombos.has(comboKey)) {
-          hasDuplicate = true
+        let playerTeams = null
+        let innerAttempts = 0
+
+        while (innerAttempts < 100) {
+          // Pick one random team from each pot
+          const candidate = potArrays.map(pot => pot[Math.floor(Math.random() * pot.length)])
+          // Check no two teams from same group
+          const groups = candidate.map(t => t.group)
+          const uniqueGroups = new Set(groups)
+          if (uniqueGroups.size !== candidate.length) {
+            innerAttempts++
+            continue
+          }
+          // Check combo not already used
+          const comboKey = candidate.map(t => t.name).sort().join('|')
+          if (usedCombos.has(comboKey)) {
+            innerAttempts++
+            continue
+          }
+          playerTeams = candidate
+          usedCombos.add(comboKey)
           break
         }
-        usedCombos.add(comboKey)
-        result[valid[i]] = teams
+
+        if (!playerTeams) {
+          failed = true
+          break
+        }
+        result[valid[i]] = playerTeams
       }
 
-      if (!hasDuplicate) break
+      if (!failed) {
+        success = true
+      }
       attempts++
+    }
+
+    if (!success) {
+      setDrawError('Could not find a valid draw after many attempts. Try with fewer players.')
+      setDrawing(false)
+      return
     }
 
     await set(ref(db, 'assignments'), result)
     const initPoints = {}
-    potArrays.flat().forEach(t => {
+    Object.values(POTS).flat().forEach(t => {
       initPoints[t.name] = { group: [] }
     })
     await set(ref(db, 'teamPoints'), initPoints)
+    await remove(ref(db, 'fixtureResults'))
     setDrawing(false)
   }
 
   async function resetAll() {
     await remove(ref(db, 'assignments'))
     await remove(ref(db, 'teamPoints'))
+    await remove(ref(db, 'fixtureResults'))
+    await remove(ref(db, 'knockoutFixtures'))
     setConfirmReset(false)
   }
 
@@ -89,6 +123,7 @@ export default function AdminPanel({ assignments, onLogout }) {
             ))}
           </div>
           <button style={s.ghostBtn} onClick={addPlayer}>+ Add Player</button>
+          {drawError && <p style={{ color: '#ff6b6b', fontSize: 12, marginTop: 8 }}>{drawError}</p>}
           <button
             style={{ ...s.primaryBtn, opacity: players.filter(p => p.trim()).length < 2 ? 0.4 : 1, marginTop: 16 }}
             onClick={runDraw}
@@ -113,7 +148,7 @@ export default function AdminPanel({ assignments, onLogout }) {
               </button>
             ) : (
               <div style={s.confirmBox}>
-                <p style={s.confirmText}>This will delete all players and results. Are you sure?</p>
+                <p style={s.confirmText}>This will delete all players, results and fixtures. Are you sure?</p>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button style={{ ...s.miniBtn, ...s.btnL, padding: '8px 16px' }} onClick={resetAll}>Yes, reset</button>
                   <button style={{ ...s.miniBtn, ...s.btnUndo, padding: '8px 16px' }} onClick={() => setConfirmReset(false)}>Cancel</button>
