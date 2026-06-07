@@ -46,22 +46,23 @@ const s = {
   // Tabs
   tabs: {
     display: 'flex',
-    gap: 6,
+    gap: 4,
     marginBottom: 16,
     width: '100%',
     maxWidth: 520,
+    overflowX: 'auto',
   },
   tab: {
-    flex: 1,
+    flex: '0 0 auto',
     background: 'rgba(255,255,255,0.04)',
     border: '1px solid rgba(255,255,255,0.08)',
     color: 'rgba(255,255,255,0.45)',
     borderRadius: 10,
-    padding: '10px 4px',
+    padding: '9px 10px',
     cursor: 'pointer',
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Georgia, serif',
-    transition: 'all 0.15s',
+    whiteSpace: 'nowrap',
   },
   tabActive: {
     background: 'rgba(255,215,0,0.1)',
@@ -128,7 +129,121 @@ const s = {
   teamLineGoals: { color: 'rgba(255,255,255,0.35)', fontSize: 11 },
   teamLinePts: { color: 'rgba(255,215,0,0.8)', fontSize: 13, fontWeight: 700 },
 
-  // Results entry
+  // Fixtures
+  groupFilter: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginBottom: 8,
+  },
+  groupFilterBtn: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    color: 'rgba(255,255,255,0.45)',
+    borderRadius: 8,
+    padding: '5px 10px',
+    cursor: 'pointer',
+    fontSize: 12,
+    fontFamily: 'Georgia, serif',
+  },
+  groupFilterActive: {
+    background: 'rgba(255,215,0,0.1)',
+    border: '1px solid rgba(255,215,0,0.35)',
+    color: '#FFD700',
+  },
+  dateLabel: {
+    color: 'rgba(255,215,0,0.6)',
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: 1.5,
+    marginTop: 10,
+    marginBottom: 4,
+    paddingLeft: 2,
+  },
+  fixtureRow: {
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: 10,
+    padding: '10px 12px',
+    marginBottom: 4,
+  },
+  fixtureTeams: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  fixtureTeam: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  fixtureTeamRight: {
+    justifyContent: 'flex-end',
+  },
+  fixtureFlag: { fontSize: 20 },
+  fixtureTeamName: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    fontWeight: 600,
+  },
+  fixtureScore: {
+    minWidth: 60,
+    textAlign: 'center',
+  },
+  fixtureScoreText: {
+    color: '#FFD700',
+    fontWeight: 700,
+    fontSize: 16,
+  },
+  fixtureVs: {
+    color: 'rgba(255,255,255,0.25)',
+    fontSize: 12,
+  },
+  fixtureTbd: {
+    color: 'rgba(255,255,255,0.25)',
+    fontSize: 12,
+  },
+  fixtureInputRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTop: '1px solid rgba(255,255,255,0.05)',
+    justifyContent: 'center',
+  },
+  scoreInput: {
+    width: 48,
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,215,0,0.2)',
+    borderRadius: 8,
+    padding: '5px 8px',
+    color: '#fff',
+    fontSize: 14,
+    textAlign: 'center',
+    outline: 'none',
+    fontFamily: 'Georgia, serif',
+  },
+
+  // Knockout
+  thirdPlaceBox: {
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,215,0,0.15)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+  },
+  thirdPlaceRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '5px 0',
+    borderTop: '1px solid rgba(255,255,255,0.05)',
+  },
+
+  // Sections
   sectionLabel: {
     color: 'rgba(255,215,0,0.55)',
     fontSize: 10,
@@ -138,6 +253,8 @@ const s = {
     marginBottom: 2,
     paddingLeft: 2,
   },
+
+  // Results
   resultRowWrap: {
     display: 'flex',
     flexDirection: 'column',
