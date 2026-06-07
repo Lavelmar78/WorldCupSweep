@@ -23,37 +23,70 @@ export default function AdminPanel({ assignments, onLogout }) {
     setDrawError('')
 
     const potArrays = Object.values(POTS)
+    const pot1 = potArrays[0]
+    const pot2 = potArrays[1]
+    const pot3 = potArrays[2]
+    const pot4 = potArrays[3]
+    const playerCount = valid.length
+    const restrictPots12 = playerCount < 12
+
     let result = {}
     let attempts = 0
     let success = false
 
-    while (attempts < 500 && !success) {
+    while (attempts < 1000 && !success) {
       result = {}
       const usedCombos = new Set()
+      const usedPot1 = new Set()
+      const usedPot2 = new Set()
       let failed = false
+
+      // Shuffle all pots for randomness
+      const sp1 = shuffle([...pot1])
+      const sp2 = shuffle([...pot2])
+      const sp3 = shuffle([...pot3])
+      const sp4 = shuffle([...pot4])
 
       for (let i = 0; i < valid.length; i++) {
         let playerTeams = null
         let innerAttempts = 0
 
-        while (innerAttempts < 100) {
-          // Pick one random team from each pot
-          const candidate = potArrays.map(pot => pot[Math.floor(Math.random() * pot.length)])
-          // Check no two teams from same group
+        while (innerAttempts < 200) {
+          // Pick from each pot
+          const t1 = sp1[Math.floor(Math.random() * sp1.length)]
+          const t2 = sp2[Math.floor(Math.random() * sp2.length)]
+          const t3 = sp3[Math.floor(Math.random() * sp3.length)]
+          const t4 = sp4[Math.floor(Math.random() * sp4.length)]
+          const candidate = [t1, t2, t3, t4]
+
+          // Rule 1: no two teams from same group
           const groups = candidate.map(t => t.group)
-          const uniqueGroups = new Set(groups)
-          if (uniqueGroups.size !== candidate.length) {
+          if (new Set(groups).size !== 4) {
             innerAttempts++
             continue
           }
-          // Check combo not already used
+
+          // Rule 2: if < 12 players, no repeat pot 1 or pot 2 teams
+          if (restrictPots12) {
+            if (usedPot1.has(t1.name) || usedPot2.has(t2.name)) {
+              innerAttempts++
+              continue
+            }
+          }
+
+          // Rule 3: no duplicate 4-team combinations
           const comboKey = candidate.map(t => t.name).sort().join('|')
           if (usedCombos.has(comboKey)) {
             innerAttempts++
             continue
           }
+
           playerTeams = candidate
           usedCombos.add(comboKey)
+          if (restrictPots12) {
+            usedPot1.add(t1.name)
+            usedPot2.add(t2.name)
+          }
           break
         }
 
@@ -64,14 +97,12 @@ export default function AdminPanel({ assignments, onLogout }) {
         result[valid[i]] = playerTeams
       }
 
-      if (!failed) {
-        success = true
-      }
+      if (!failed) success = true
       attempts++
     }
 
     if (!success) {
-      setDrawError('Could not find a valid draw after many attempts. Try with fewer players.')
+      setDrawError('Could not find a valid draw. Try with fewer players or check group constraints.')
       setDrawing(false)
       return
     }
@@ -83,6 +114,7 @@ export default function AdminPanel({ assignments, onLogout }) {
     })
     await set(ref(db, 'teamPoints'), initPoints)
     await remove(ref(db, 'fixtureResults'))
+    await remove(ref(db, 'knockoutFixtures'))
     setDrawing(false)
   }
 
