@@ -1,39 +1,42 @@
 import { useState, useEffect } from 'react'
 import { db } from './firebase'
 import { ref, onValue } from 'firebase/database'
+import { calcGroupStandings, getBestThirdPlace } from './data'
 import AdminLogin from './components/AdminLogin'
 import AdminPanel from './components/AdminPanel'
 import Leaderboard from './components/Leaderboard'
 import TeamsView from './components/TeamsView'
-import ResultsEntry from './components/ResultsEntry'
+import Fixtures from './components/Fixtures'
+import Knockout from './components/Knockout'
 import s from './styles'
 
-const TABS_PUBLIC  = ['leaderboard', 'teams']
-const TABS_ADMIN   = ['leaderboard', 'teams', 'results', 'admin']
-const TAB_LABELS   = {
+const TAB_LABELS = {
   leaderboard: '🥇 Standings',
   teams:       '👥 Teams',
-  results:     '⚽ Results',
+  fixtures:    '📅 Fixtures',
+  knockout:    '⚔️ Knockout',
   admin:       '🔑 Admin',
 }
 
 export default function App() {
-  const [assignments, setAssignments]   = useState({})
-  const [teamPoints, setTeamPoints]     = useState({})
-  const [isAdmin, setIsAdmin]           = useState(false)
-  const [showLogin, setShowLogin]       = useState(false)
-  const [activeTab, setActiveTab]       = useState('leaderboard')
+  const [assignments, setAssignments]       = useState({})
+  const [teamPoints, setTeamPoints]         = useState({})
+  const [fixtureResults, setFixtureResults] = useState({})
+  const [knockoutFixtures, setKnockoutFixtures] = useState({})
+  const [isAdmin, setIsAdmin]               = useState(false)
+  const [showLogin, setShowLogin]           = useState(false)
+  const [activeTab, setActiveTab]           = useState('leaderboard')
 
-  // Firebase listeners
   useEffect(() => {
-    const unsub1 = onValue(ref(db, 'assignments'), snap => {
-      setAssignments(snap.val() || {})
-    })
-    const unsub2 = onValue(ref(db, 'teamPoints'), snap => {
-      setTeamPoints(snap.val() || {})
-    })
-    return () => { unsub1(); unsub2() }
+    const u1 = onValue(ref(db, 'assignments'),      snap => setAssignments(snap.val() || {}))
+    const u2 = onValue(ref(db, 'teamPoints'),       snap => setTeamPoints(snap.val() || {}))
+    const u3 = onValue(ref(db, 'fixtureResults'),   snap => setFixtureResults(snap.val() || {}))
+    const u4 = onValue(ref(db, 'knockoutFixtures'), snap => setKnockoutFixtures(snap.val() || {}))
+    return () => { u1(); u2(); u3(); u4() }
   }, [])
+
+  const standings = calcGroupStandings(fixtureResults)
+  const bestThird = getBestThirdPlace(standings)
 
   function handleLogin() {
     setIsAdmin(true)
@@ -46,7 +49,9 @@ export default function App() {
     setActiveTab('leaderboard')
   }
 
-  const tabs = isAdmin ? TABS_ADMIN : TABS_PUBLIC
+  const tabs = isAdmin
+    ? ['leaderboard', 'teams', 'fixtures', 'knockout', 'admin']
+    : ['leaderboard', 'teams', 'fixtures', 'knockout']
 
   return (
     <div style={s.root}>
@@ -54,7 +59,6 @@ export default function App() {
         <AdminLogin onLogin={handleLogin} onClose={() => setShowLogin(false)} />
       )}
 
-      {/* Header */}
       <div style={s.appHeader}>
         <div>
           <div style={s.appTitle}>🏆 World Cup Sweep</div>
@@ -67,7 +71,6 @@ export default function App() {
         )}
       </div>
 
-      {/* Tabs */}
       <div style={s.tabs}>
         {tabs.map(tab => (
           <button
@@ -80,7 +83,6 @@ export default function App() {
         ))}
       </div>
 
-      {/* Content */}
       <div style={s.mainContent}>
         {activeTab === 'leaderboard' && (
           <Leaderboard assignments={assignments} teamPoints={teamPoints} />
@@ -88,8 +90,22 @@ export default function App() {
         {activeTab === 'teams' && (
           <TeamsView assignments={assignments} teamPoints={teamPoints} />
         )}
-        {activeTab === 'results' && isAdmin && (
-          <ResultsEntry teamPoints={teamPoints} />
+        {activeTab === 'fixtures' && (
+          <Fixtures
+            fixtureResults={fixtureResults}
+            teamPoints={teamPoints}
+            isAdmin={isAdmin}
+          />
+        )}
+        {activeTab === 'knockout' && (
+          <Knockout
+            standings={standings}
+            bestThird={bestThird}
+            fixtureResults={fixtureResults}
+            knockoutFixtures={knockoutFixtures}
+            teamPoints={teamPoints}
+            isAdmin={isAdmin}
+          />
         )}
         {activeTab === 'admin' && isAdmin && (
           <AdminPanel assignments={assignments} onLogout={handleLogout} />
