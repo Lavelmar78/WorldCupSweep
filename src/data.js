@@ -2,8 +2,8 @@ export const GROUPS = {
   A: ['Mexico', 'South Africa', 'South Korea', 'Czechia'],
   B: ['Canada', 'Bosnia & Herzegovina', 'Qatar', 'Switzerland'],
   C: ['Brazil', 'Morocco', 'Haiti', 'Scotland'],
-  D: ['USA', 'Paraguay', 'Australia', 'Türkiye'],
-  E: ['Germany', 'Curaçao', 'Ivory Coast', 'Ecuador'],
+  D: ['USA', 'Paraguay', 'Australia', 'Turkiye'],
+  E: ['Germany', 'Curacao', 'Ivory Coast', 'Ecuador'],
   F: ['Netherlands', 'Japan', 'Sweden', 'Tunisia'],
   G: ['Belgium', 'Egypt', 'Iran', 'New Zealand'],
   H: ['Spain', 'Cape Verde', 'Saudi Arabia', 'Uruguay'],
@@ -13,62 +13,65 @@ export const GROUPS = {
   L: ['England', 'Croatia', 'Ghana', 'Panama'],
 }
 
+const ENG = '\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}'
+const SCO = '\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E006F}\u{E007F}'
+
 export const POTS = {
   'Pot 1': [
-    { name: 'France',      flag: '🇫🇷', group: 'I' },
-    { name: 'Spain',       flag: '🇪🇸', group: 'H' },
-    { name: 'Argentina',   flag: '🇦🇷', group: 'J' },
-    { name: 'England',     flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', group: 'L' },
-    { name: 'Portugal',    flag: '🇵🇹', group: 'K' },
-    { name: 'Brazil',      flag: '🇧🇷', group: 'C' },
-    { name: 'Netherlands', flag: '🇳🇱', group: 'F' },
-    { name: 'Morocco',     flag: '🇲🇦', group: 'C' },
-    { name: 'Belgium',     flag: '🇧🇪', group: 'G' },
-    { name: 'Germany',     flag: '🇩🇪', group: 'E' },
-    { name: 'Croatia',     flag: '🇭🇷', group: 'L' },
-    { name: 'Colombia',    flag: '🇨🇴', group: 'K' },
+    { name: 'France',      flag: '\uD83C\uDDEB\uD83C\uDDF7', group: 'I' },
+    { name: 'Spain',       flag: '\uD83C\uDDEA\uD83C\uDDF8', group: 'H' },
+    { name: 'Argentina',   flag: '\uD83C\uDDE6\uD83C\uDDF7', group: 'J' },
+    { name: 'England',     flag: ENG, group: 'L' },
+    { name: 'Portugal',    flag: '\uD83C\uDDF5\uD83C\uDDF9', group: 'K' },
+    { name: 'Brazil',      flag: '\uD83C\uDDE7\uD83C\uDDF7', group: 'C' },
+    { name: 'Netherlands', flag: '\uD83C\uDDF3\uD83C\uDDF1', group: 'F' },
+    { name: 'Morocco',     flag: '\uD83C\uDDF2\uD83C\uDDE6', group: 'C' },
+    { name: 'Belgium',     flag: '\uD83C\uDDE7\uD83C\uDDEA', group: 'G' },
+    { name: 'Germany',     flag: '\uD83C\uDDE9\uD83C\uDDEA', group: 'E' },
+    { name: 'Croatia',     flag: '\uD83C\uDDED\uD83C\uDDF7', group: 'L' },
+    { name: 'Colombia',    flag: '\uD83C\uDDE8\uD83C\uDDF4', group: 'K' },
   ],
   'Pot 2': [
-    { name: 'Senegal',     flag: '🇸🇳', group: 'I' },
-    { name: 'Mexico',      flag: '🇲🇽', group: 'A' },
-    { name: 'USA',         flag: '🇺🇸', group: 'D' },
-    { name: 'Uruguay',     flag: '🇺🇾', group: 'H' },
-    { name: 'Japan',       flag: '🇯🇵', group: 'F' },
-    { name: 'Switzerland', flag: '🇨🇭', group: 'B' },
-    { name: 'Iran',        flag: '🇮🇷', group: 'G' },
-    { name: 'Austria',     flag: '🇦🇹', group: 'J' },
-    { name: 'Ecuador',     flag: '🇪🇨', group: 'E' },
-    { name: 'South Korea', flag: '🇰🇷', group: 'A' },
-    { name: 'Australia',   flag: '🇦🇺', group: 'D' },
-    { name: 'Egypt',       flag: '🇪🇬', group: 'G' },
+    { name: 'Senegal',     flag: '\uD83C\uDDF8\uD83C\uDDF3', group: 'I' },
+    { name: 'Mexico',      flag: '\uD83C\uDDF2\uD83C\uDDFD', group: 'A' },
+    { name: 'USA',         flag: '\uD83C\uDDFA\uD83C\uDDF8', group: 'D' },
+    { name: 'Uruguay',     flag: '\uD83C\uDDFA\uD83C\uDDFE', group: 'H' },
+    { name: 'Japan',       flag: '\uD83C\uDDEF\uD83C\uDDF5', group: 'F' },
+    { name: 'Switzerland', flag: '\uD83C\uDDE8\uD83C\uDDED', group: 'B' },
+    { name: 'Iran',        flag: '\uD83C\uDDEE\uD83C\uDDF7', group: 'G' },
+    { name: 'Austria',     flag: '\uD83C\uDDE6\uD83C\uDDF9', group: 'J' },
+    { name: 'Ecuador',     flag: '\uD83C\uDDEA\uD83C\uDDE8', group: 'E' },
+    { name: 'South Korea', flag: '\uD83C\uDDF0\uD83C\uDDF7', group: 'A' },
+    { name: 'Australia',   flag: '\uD83C\uDDE6\uD83C\uDDFA', group: 'D' },
+    { name: 'Egypt',       flag: '\uD83C\uDDEA\uD83C\uDDEC', group: 'G' },
   ],
   'Pot 3': [
-    { name: 'Canada',      flag: '🇨🇦', group: 'B' },
-    { name: 'Ivory Coast', flag: '🇨🇮', group: 'E' },
-    { name: 'Qatar',       flag: '🇶🇦', group: 'B' },
-    { name: 'Algeria',     flag: '🇩🇿', group: 'J' },
-    { name: 'Sweden',      flag: '🇸🇪', group: 'F' },
-    { name: 'Paraguay',    flag: '🇵🇾', group: 'D' },
-    { name: 'Czechia',     flag: '🇨🇿', group: 'A' },
-    { name: 'Türkiye',     flag: '🇹🇷', group: 'D' },
-    { name: 'Scotland',    flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', group: 'C' },
-    { name: 'DR Congo',    flag: '🇨🇩', group: 'K' },
-    { name: 'Tunisia',     flag: '🇹🇳', group: 'F' },
-    { name: 'Norway',      flag: '🇳🇴', group: 'I' },
+    { name: 'Canada',      flag: '\uD83C\uDDE8\uD83C\uDDE6', group: 'B' },
+    { name: 'Ivory Coast', flag: '\uD83C\uDDE8\uD83C\uDDEE', group: 'E' },
+    { name: 'Qatar',       flag: '\uD83C\uDDF6\uD83C\uDDE6', group: 'B' },
+    { name: 'Algeria',     flag: '\uD83C\uDDE9\uD83C\uDDFF', group: 'J' },
+    { name: 'Sweden',      flag: '\uD83C\uDDF8\uD83C\uDDEA', group: 'F' },
+    { name: 'Paraguay',    flag: '\uD83C\uDDF5\uD83C\uDDFE', group: 'D' },
+    { name: 'Czechia',     flag: '\uD83C\uDDE8\uD83C\uDDFF', group: 'A' },
+    { name: 'Turkiye',     flag: '\uD83C\uDDF9\uD83C\uDDF7', group: 'D' },
+    { name: 'Scotland',    flag: SCO, group: 'C' },
+    { name: 'DR Congo',    flag: '\uD83C\uDDE8\uD83C\uDDE9', group: 'K' },
+    { name: 'Tunisia',     flag: '\uD83C\uDDF9\uD83C\uDDF3', group: 'F' },
+    { name: 'Norway',      flag: '\uD83C\uDDF3\uD83C\uDDF4', group: 'I' },
   ],
   'Pot 4': [
-    { name: 'Uzbekistan',          flag: '🇺🇿', group: 'K' },
-    { name: 'Bosnia & Herzegovina',flag: '🇧🇦', group: 'B' },
-    { name: 'Panama',              flag: '🇵🇦', group: 'L' },
-    { name: 'Iraq',                flag: '🇮🇶', group: 'I' },
-    { name: 'South Africa',        flag: '🇿🇦', group: 'A' },
-    { name: 'Saudi Arabia',        flag: '🇸🇦', group: 'H' },
-    { name: 'Jordan',              flag: '🇯🇴', group: 'J' },
-    { name: 'Cape Verde',          flag: '🇨🇻', group: 'H' },
-    { name: 'Ghana',               flag: '🇬🇭', group: 'L' },
-    { name: 'Haiti',               flag: '🇭🇹', group: 'C' },
-    { name: 'Curaçao',             flag: '🇨🇼', group: 'E' },
-    { name: 'New Zealand',         flag: '🇳🇿', group: 'G' },
+    { name: 'Uzbekistan',           flag: '\uD83C\uDDFA\uD83C\uDDFF', group: 'K' },
+    { name: 'Bosnia & Herzegovina', flag: '\uD83C\uDDE7\uD83C\uDDE6', group: 'B' },
+    { name: 'Panama',               flag: '\uD83C\uDDF5\uD83C\uDDE6', group: 'L' },
+    { name: 'Iraq',                 flag: '\uD83C\uDDEE\uD83C\uDDF6', group: 'I' },
+    { name: 'South Africa',         flag: '\uD83C\uDDFF\uD83C\uDDE6', group: 'A' },
+    { name: 'Saudi Arabia',         flag: '\uD83C\uDDF8\uD83C\uDDE6', group: 'H' },
+    { name: 'Jordan',               flag: '\uD83C\uDDEF\uD83C\uDDF4', group: 'J' },
+    { name: 'Cape Verde',           flag: '\uD83C\uDDE8\uD83C\uDDFB', group: 'H' },
+    { name: 'Ghana',                flag: '\uD83C\uDDEC\uD83C\uDDED', group: 'L' },
+    { name: 'Haiti',                flag: '\uD83C\uDDED\uD83C\uDDF9', group: 'C' },
+    { name: 'Curacao',              flag: '\uD83C\uDDE8\uD83C\uDDFC', group: 'E' },
+    { name: 'New Zealand',          flag: '\uD83C\uDDF3\uD83C\uDDFF', group: 'G' },
   ],
 }
 
@@ -99,19 +102,19 @@ export const FIXTURES = [
   { id: 'C5', date: '2026-06-23', home: 'Morocco',  away: 'Haiti',    group: 'C' },
   { id: 'C6', date: '2026-06-23', home: 'Scotland', away: 'Brazil',   group: 'C' },
   // Group D
-  { id: 'D1', date: '2026-06-12', home: 'USA',       away: 'Paraguay',  group: 'D' },
-  { id: 'D2', date: '2026-06-13', home: 'Australia', away: 'Türkiye',   group: 'D' },
-  { id: 'D3', date: '2026-06-19', home: 'USA',       away: 'Australia', group: 'D' },
-  { id: 'D4', date: '2026-06-19', home: 'Türkiye',   away: 'Paraguay',  group: 'D' },
-  { id: 'D5', date: '2026-06-25', home: 'Türkiye',   away: 'USA',       group: 'D' },
-  { id: 'D6', date: '2026-06-25', home: 'Paraguay',  away: 'Australia', group: 'D' },
+  { id: 'D1', date: '2026-06-12', home: 'USA',      away: 'Paraguay',  group: 'D' },
+  { id: 'D2', date: '2026-06-13', home: 'Australia',away: 'Turkiye',   group: 'D' },
+  { id: 'D3', date: '2026-06-19', home: 'USA',      away: 'Australia', group: 'D' },
+  { id: 'D4', date: '2026-06-19', home: 'Turkiye',  away: 'Paraguay',  group: 'D' },
+  { id: 'D5', date: '2026-06-25', home: 'Turkiye',  away: 'USA',       group: 'D' },
+  { id: 'D6', date: '2026-06-25', home: 'Paraguay', away: 'Australia', group: 'D' },
   // Group E
-  { id: 'E1', date: '2026-06-14', home: 'Germany',     away: 'Curaçao',     group: 'E' },
+  { id: 'E1', date: '2026-06-14', home: 'Germany',     away: 'Curacao',     group: 'E' },
   { id: 'E2', date: '2026-06-14', home: 'Ivory Coast', away: 'Ecuador',     group: 'E' },
   { id: 'E3', date: '2026-06-20', home: 'Germany',     away: 'Ivory Coast', group: 'E' },
-  { id: 'E4', date: '2026-06-20', home: 'Ecuador',     away: 'Curaçao',     group: 'E' },
+  { id: 'E4', date: '2026-06-20', home: 'Ecuador',     away: 'Curacao',     group: 'E' },
   { id: 'E5', date: '2026-06-25', home: 'Ecuador',     away: 'Germany',     group: 'E' },
-  { id: 'E6', date: '2026-06-25', home: 'Curaçao',     away: 'Ivory Coast', group: 'E' },
+  { id: 'E6', date: '2026-06-25', home: 'Curacao',     away: 'Ivory Coast', group: 'E' },
   // Group F
   { id: 'F1', date: '2026-06-14', home: 'Netherlands', away: 'Japan',       group: 'F' },
   { id: 'F2', date: '2026-06-14', home: 'Sweden',      away: 'Tunisia',     group: 'F' },
@@ -127,12 +130,12 @@ export const FIXTURES = [
   { id: 'G5', date: '2026-06-26', home: 'Egypt',       away: 'Iran',        group: 'G' },
   { id: 'G6', date: '2026-06-26', home: 'New Zealand', away: 'Belgium',     group: 'G' },
   // Group H
-  { id: 'H1', date: '2026-06-15', home: 'Spain',        away: 'Cape Verde',  group: 'H' },
-  { id: 'H2', date: '2026-06-15', home: 'Saudi Arabia', away: 'Uruguay',     group: 'H' },
-  { id: 'H3', date: '2026-06-21', home: 'Spain',        away: 'Saudi Arabia',group: 'H' },
-  { id: 'H4', date: '2026-06-21', home: 'Uruguay',      away: 'Cape Verde',  group: 'H' },
-  { id: 'H5', date: '2026-06-26', home: 'Cape Verde',   away: 'Saudi Arabia',group: 'H' },
-  { id: 'H6', date: '2026-06-26', home: 'Uruguay',      away: 'Spain',       group: 'H' },
+  { id: 'H1', date: '2026-06-15', home: 'Spain',        away: 'Cape Verde',   group: 'H' },
+  { id: 'H2', date: '2026-06-15', home: 'Saudi Arabia', away: 'Uruguay',      group: 'H' },
+  { id: 'H3', date: '2026-06-21', home: 'Spain',        away: 'Saudi Arabia', group: 'H' },
+  { id: 'H4', date: '2026-06-21', home: 'Uruguay',      away: 'Cape Verde',   group: 'H' },
+  { id: 'H5', date: '2026-06-26', home: 'Cape Verde',   away: 'Saudi Arabia', group: 'H' },
+  { id: 'H6', date: '2026-06-26', home: 'Uruguay',      away: 'Spain',        group: 'H' },
   // Group I
   { id: 'I1', date: '2026-06-16', home: 'France',  away: 'Senegal', group: 'I' },
   { id: 'I2', date: '2026-06-16', home: 'Iraq',    away: 'Norway',  group: 'I' },
@@ -141,12 +144,12 @@ export const FIXTURES = [
   { id: 'I5', date: '2026-06-26', home: 'Norway',  away: 'France',  group: 'I' },
   { id: 'I6', date: '2026-06-26', home: 'Senegal', away: 'Iraq',    group: 'I' },
   // Group J
-  { id: 'J1', date: '2026-06-16', home: 'Argentina', away: 'Algeria', group: 'J' },
-  { id: 'J2', date: '2026-06-16', home: 'Austria',   away: 'Jordan',  group: 'J' },
-  { id: 'J3', date: '2026-06-22', home: 'Argentina', away: 'Austria', group: 'J' },
-  { id: 'J4', date: '2026-06-22', home: 'Jordan',    away: 'Algeria', group: 'J' },
-  { id: 'J5', date: '2026-06-27', home: 'Algeria',   away: 'Austria', group: 'J' },
-  { id: 'J6', date: '2026-06-27', home: 'Jordan',    away: 'Argentina',group: 'J' },
+  { id: 'J1', date: '2026-06-16', home: 'Argentina', away: 'Algeria',   group: 'J' },
+  { id: 'J2', date: '2026-06-16', home: 'Austria',   away: 'Jordan',    group: 'J' },
+  { id: 'J3', date: '2026-06-22', home: 'Argentina', away: 'Austria',   group: 'J' },
+  { id: 'J4', date: '2026-06-22', home: 'Jordan',    away: 'Algeria',   group: 'J' },
+  { id: 'J5', date: '2026-06-27', home: 'Algeria',   away: 'Austria',   group: 'J' },
+  { id: 'J6', date: '2026-06-27', home: 'Jordan',    away: 'Argentina', group: 'J' },
   // Group K
   { id: 'K1', date: '2026-06-17', home: 'Portugal',   away: 'DR Congo',   group: 'K' },
   { id: 'K2', date: '2026-06-17', home: 'Uzbekistan', away: 'Colombia',   group: 'K' },
@@ -218,7 +221,6 @@ export function calcTeamGoals(tp) {
   return { scored, conceded }
 }
 
-// Calculate group standings from fixture results
 export function calcGroupStandings(fixtureResults) {
   const standings = {}
   Object.keys(GROUPS).forEach(group => {
@@ -232,3 +234,49 @@ export function calcGroupStandings(fixtureResults) {
   })
 
   FIXTURES.forEach(fixture => {
+    const result = fixtureResults?.[fixture.id]
+    if (!result || result.homeScore === undefined) return
+    const hs = Number(result.homeScore)
+    const as = Number(result.awayScore)
+    const group = standings[fixture.group]
+    if (!group) return
+    const homeTeam = group.find(t => t.name === fixture.home)
+    const awayTeam = group.find(t => t.name === fixture.away)
+    if (!homeTeam || !awayTeam) return
+
+    homeTeam.played++; awayTeam.played++
+    homeTeam.gf += hs; homeTeam.ga += as
+    awayTeam.gf += as; awayTeam.ga += hs
+    homeTeam.gd = homeTeam.gf - homeTeam.ga
+    awayTeam.gd = awayTeam.gf - awayTeam.ga
+
+    if (hs > as) {
+      homeTeam.won++; homeTeam.pts += 3
+      awayTeam.lost++
+    } else if (hs < as) {
+      awayTeam.won++; awayTeam.pts += 3
+      homeTeam.lost++
+    } else {
+      homeTeam.drawn++; homeTeam.pts += 1
+      awayTeam.drawn++; awayTeam.pts += 1
+    }
+  })
+
+  Object.keys(standings).forEach(group => {
+    standings[group].sort((a, b) =>
+      b.pts - a.pts || b.gd - a.gd || b.gf - a.gf
+    )
+  })
+
+  return standings
+}
+
+export function getBestThirdPlace(standings) {
+  const thirds = Object.entries(standings)
+    .map(([group, teams]) => ({ ...teams[2], group }))
+    .filter(t => t.played > 0)
+    .sort((a, b) =>
+      b.pts - a.pts || b.gd - a.gd || b.gf - a.gf
+    )
+  return thirds.slice(0, 8)
+}
