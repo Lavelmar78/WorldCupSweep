@@ -9,88 +9,73 @@ function assignTeamsSmallGroup(valid, potArrays) {
   const playerCount = valid.length
 
   for (let attempt = 0; attempt < 2000; attempt++) {
-    // Shuffle all pots fresh each attempt
     const sp1 = shuffle([...pot1])
     const sp2 = shuffle([...pot2])
     const sp3 = shuffle([...pot3])
     const sp4 = shuffle([...pot4])
 
-    // Build pool of valid pot1 pairs (no same group between the two)
-    const pot1Pairs = []
-    for (let i = 0; i < sp1.length; i++) {
-      for (let j = i + 1; j < sp1.length; j++) {
-        if (sp1[i].group !== sp1[j].group) {
-          pot1Pairs.push([sp1[i], sp1[j]])
-        }
-      }
-    }
-
-    // Build pool of valid pot2 pairs (no same group between the two)
-    const pot2Pairs = []
-    for (let i = 0; i < sp2.length; i++) {
-      for (let j = i + 1; j < sp2.length; j++) {
-        if (sp2[i].group !== sp2[j].group) {
-          pot2Pairs.push([sp2[i], sp2[j]])
-        }
-      }
-    }
-
-    const shuffledP1Pairs = shuffle(pot1Pairs)
-    const shuffledP2Pairs = shuffle(pot2Pairs)
-
     const result = {}
     const usedCombos = new Set()
-    const usedPot1Teams = new Set()
-    const usedPot2Teams = new Set()
+    const usedPot1 = new Set()
+    const usedPot2 = new Set()
     let failed = false
 
     for (let i = 0; i < playerCount; i++) {
       let playerTeams = null
 
-      // Find a valid pot1 pair not using already used teams
-      const p1pair = shuffledP1Pairs.find(([a, b]) =>
-        !usedPot1Teams.has(a.name) && !usedPot1Teams.has(b.name)
-      )
-      if (!p1pair) { failed = true; break }
+      for (let inner = 0; inner < 300; inner++) {
+        // Pick first Pot 1 team — prefer unused
+        const avail1a = sp1.filter(t => !usedPot1.has(t.name))
+        const pool1a = avail1a.length > 0 ? avail1a : sp1
+        const t1a = pool1a[Math.floor(Math.random() * pool1a.length)]
 
-      // Find a valid pot2 pair not using already used teams
-      const p2pair = shuffledP2Pairs.find(([a, b]) =>
-        !usedPot2Teams.has(a.name) && !usedPot2Teams.has(b.name)
-      )
-      if (!p2pair) { failed = true; break }
+        // Pick second Pot 1 team — can repeat but must be different team
+        // and different group from t1a only (relaxed rule)
+        const pool1b = sp1.filter(t => t.name !== t1a.name && t.group !== t1a.group)
+        if (pool1b.length === 0) continue
+        const t1b = pool1b[Math.floor(Math.random() * pool1b.length)]
 
-      // Try pot3 and pot4 picks that don't clash with chosen groups
-      const usedGroups = new Set([
-        p1pair[0].group, p1pair[1].group,
-        p2pair[0].group, p2pair[1].group,
-      ])
+        // Pick first Pot 2 team — prefer unused
+        const avail2a = sp2.filter(t => !usedPot2.has(t.name))
+        const pool2a = avail2a.length > 0 ? avail2a : sp2
+        const t2a = pool2a[Math.floor(Math.random() * pool2a.length)]
 
-      const t3 = sp3.find(t => !usedGroups.has(t.group))
-      if (!t3) { failed = true; break }
-      usedGroups.add(t3.group)
+        // Pick second Pot 2 team — can repeat but must be different team
+        // and different group from t2a only (relaxed rule)
+        const pool2b = sp2.filter(t => t.name !== t2a.name && t.group !== t2a.group)
+        if (pool2b.length === 0) continue
+        const t2b = pool2b[Math.floor(Math.random() * pool2b.length)]
 
-      const t4 = sp4.find(t => !usedGroups.has(t.group))
-      if (!t4) { failed = true; break }
+        // All 6 teams must be from different groups
+        const groups = new Set([t1a.group, t1b.group, t2a.group, t2b.group])
+        if (groups.size !== 4) continue
 
-      const candidate = [p1pair[0], p1pair[1], p2pair[0], p2pair[1], t3, t4]
-      const names = candidate.map(t => t.name)
-      const comboKey = [...names].sort().join('|')
+        // Pick Pot 3 — group not already used
+        const pool3 = sp3.filter(t => !groups.has(t.group))
+        if (pool3.length === 0) continue
+        const t3 = pool3[Math.floor(Math.random() * pool3.length)]
+        groups.add(t3.group)
 
-      if (usedCombos.has(comboKey)) { failed = true; break }
+        // Pick Pot 4 — group not already used
+        const pool4 = sp4.filter(t => !groups.has(t.group))
+        if (pool4.length === 0) continue
+        const t4 = pool4[Math.floor(Math.random() * pool4.length)]
 
-      playerTeams = candidate
-      usedCombos.add(comboKey)
-      usedPot1Teams.add(p1pair[0].name)
-      usedPot1Teams.add(p1pair[1].name)
-      usedPot2Teams.add(p2pair[0].name)
-      usedPot2Teams.add(p2pair[1].name)
+        const candidate = [t1a, t1b, t2a, t2b, t3, t4]
+        const names = candidate.map(t => t.name)
+        if (new Set(names).size !== 6) continue
 
-      // Remove used pairs from pools so next player gets different teams
-      const p1idx = shuffledP1Pairs.indexOf(p1pair)
-      shuffledP1Pairs.splice(p1idx, 1)
-      const p2idx = shuffledP2Pairs.indexOf(p2pair)
-      shuffledP2Pairs.splice(p2idx, 1)
+        const comboKey = [...names].sort().join('|')
+        if (usedCombos.has(comboKey)) continue
 
+        playerTeams = candidate
+        usedCombos.add(comboKey)
+        usedPot1.add(t1a.name)
+        usedPot2.add(t2a.name)
+        break
+      }
+
+      if (!playerTeams) { failed = true; break }
       result[valid[i]] = playerTeams
     }
 
