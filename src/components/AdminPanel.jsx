@@ -4,79 +4,74 @@ import { db } from '../firebase'
 import { ref, set, remove } from 'firebase/database'
 import s from '../styles'
 
+function buildDeck(pot, needed) {
+  // Shuffle the pot and repeat until we have enough cards
+  const deck = []
+  while (deck.length < needed) {
+    deck.push(...shuffle([...pot]))
+  }
+  return deck
+}
+
 function assignTeamsSmallGroup(valid, potArrays) {
   const [pot1, pot2, pot3, pot4] = potArrays
   const playerCount = valid.length
 
   for (let attempt = 0; attempt < 2000; attempt++) {
-    const sp1 = shuffle([...pot1])
-    const sp2 = shuffle([...pot2])
-    const sp3 = shuffle([...pot3])
-    const sp4 = shuffle([...pot4])
+    // Deal cards from each pot — every team used once before repeats
+    const deck1 = buildDeck(pot1, playerCount * 2) // 2 picks per player
+    const deck2 = buildDeck(pot2, playerCount * 2)
+    const deck3 = buildDeck(pot3, playerCount)
+    const deck4 = buildDeck(pot4, playerCount)
 
     const result = {}
     const usedCombos = new Set()
-    const usedPot1 = new Set()
-    const usedPot2 = new Set()
     let failed = false
 
+    // Pre-assign pot1 pairs from deck (consecutive pairs)
+    const pot1Assignments = []
     for (let i = 0; i < playerCount; i++) {
-      let playerTeams = null
+      pot1Assignments.push([deck1[i * 2], deck1[i * 2 + 1]])
+    }
 
-      for (let inner = 0; inner < 300; inner++) {
-        // Pick first Pot 1 team — prefer unused
-        const avail1a = sp1.filter(t => !usedPot1.has(t.name))
-        const pool1a = avail1a.length > 0 ? avail1a : sp1
-        const t1a = pool1a[Math.floor(Math.random() * pool1a.length)]
+    // Pre-assign pot2 pairs from deck
+    const pot2Assignments = []
+    for (let i = 0; i < playerCount; i++) {
+      pot2Assignments.push([deck2[i * 2], deck2[i * 2 + 1]])
+    }
 
-        // Pick second Pot 1 team — can repeat but must be different team
-        // and different group from t1a only (relaxed rule)
-        const pool1b = sp1.filter(t => t.name !== t1a.name && t.group !== t1a.group)
-        if (pool1b.length === 0) continue
-        const t1b = pool1b[Math.floor(Math.random() * pool1b.length)]
+    // Pre-assign pot3 and pot4 from deck
+    const pot3Assignments = deck3.slice(0, playerCount)
+    const pot4Assignments = deck4.slice(0, playerCount)
 
-        // Pick first Pot 2 team — prefer unused
-        const avail2a = sp2.filter(t => !usedPot2.has(t.name))
-        const pool2a = avail2a.length > 0 ? avail2a : sp2
-        const t2a = pool2a[Math.floor(Math.random() * pool2a.length)]
+    for (let i = 0; i < playerCount; i++) {
+      const [t1a, t1b] = pot1Assignments[i]
+      const [t2a, t2b] = pot2Assignments[i]
+      const t3 = pot3Assignments[i]
+      const t4 = pot4Assignments[i]
 
-        // Pick second Pot 2 team — can repeat but must be different team
-        // and different group from t2a only (relaxed rule)
-        const pool2b = sp2.filter(t => t.name !== t2a.name && t.group !== t2a.group)
-        if (pool2b.length === 0) continue
-        const t2b = pool2b[Math.floor(Math.random() * pool2b.length)]
+      const candidate = [t1a, t1b, t2a, t2b, t3, t4]
+      const names = candidate.map(t => t.name)
 
-        // All 6 teams must be from different groups
-        const groups = new Set([t1a.group, t1b.group, t2a.group, t2b.group])
-        if (groups.size !== 4) continue
+      // Check no duplicate teams
+      if (new Set(names).size !== 6) { failed = true; break }
 
-        // Pick Pot 3 — group not already used
-        const pool3 = sp3.filter(t => !groups.has(t.group))
-        if (pool3.length === 0) continue
-        const t3 = pool3[Math.floor(Math.random() * pool3.length)]
-        groups.add(t3.group)
+      // Check t1a and t1b not same group
+      if (t1a.group === t1b.group) { failed = true; break }
 
-        // Pick Pot 4 — group not already used
-        const pool4 = sp4.filter(t => !groups.has(t.group))
-        if (pool4.length === 0) continue
-        const t4 = pool4[Math.floor(Math.random() * pool4.length)]
+      // Check t2a and t2b not same group
+      if (t2a.group === t2b.group) { failed = true; break }
 
-        const candidate = [t1a, t1b, t2a, t2b, t3, t4]
-        const names = candidate.map(t => t.name)
-        if (new Set(names).size !== 6) continue
+      // Check all 6 teams from different groups
+      const groups = new Set([t1a.group, t1b.group, t2a.group, t2b.group, t3.group, t4.group])
+      if (groups.size !== 6) { failed = true; break }
 
-        const comboKey = [...names].sort().join('|')
-        if (usedCombos.has(comboKey)) continue
+      // Check unique combination
+      const comboKey = [...names].sort().join('|')
+      if (usedCombos.has(comboKey)) { failed = true; break }
 
-        playerTeams = candidate
-        usedCombos.add(comboKey)
-        usedPot1.add(t1a.name)
-        usedPot2.add(t2a.name)
-        break
-      }
-
-      if (!playerTeams) { failed = true; break }
-      result[valid[i]] = playerTeams
+      usedCombos.add(comboKey)
+      result[valid[i]] = candidate
     }
 
     if (!failed) return { success: true, result }
