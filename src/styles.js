@@ -27,6 +27,12 @@ const s = {
     fontWeight: 700,
     letterSpacing: '-0.5px',
   },
+  appTitle2: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 700,
+    letterSpacing: '-0.3px',
+  },
   appSub: {
     color: 'rgba(255,255,255,0.35)',
     fontSize: 11,
@@ -399,6 +405,48 @@ const s = {
   // Empty
   empty: { padding: '40px 0', textAlign: 'center' },
   emptyText: { color: 'rgba(255,255,255,0.3)', fontSize: 14 },
+
+  // Paytable
+  paytableCard: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,215,0,0.15)',
+    borderRadius: 14,
+    padding: 16,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  },
+  paytableTitle: {
+    color: '#FFD700',
+    fontWeight: 700,
+    fontSize: 15,
+    marginBottom: 4,
+  },
+  paytableSubtitle: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 12,
+    marginTop: -6,
+  },
+  paytableRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    padding: '8px 0',
+    borderTop: '1px solid rgba(255,255,255,0.06)',
+  },
+  paytableMedal: { fontSize: 22 },
+  paytablePlace: { color: 'rgba(255,255,255,0.8)', fontSize: 14, flex: 1 },
+  paytableAmount: { color: '#FFD700', fontWeight: 700, fontSize: 20 },
+  paytablePointRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '5px 0',
+    borderTop: '1px solid rgba(255,255,255,0.05)',
+  },
+  paytablePointLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
+  paytablePointValue: { color: '#FFD700', fontWeight: 700, fontSize: 13 },
+  paytableTiebreak: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
 }
 
 export default s
