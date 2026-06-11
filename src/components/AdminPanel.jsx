@@ -4,6 +4,120 @@ import { db } from '../firebase'
 import { ref, set, remove } from 'firebase/database'
 import s from '../styles'
 
+function assignTeamsSmallGroup(valid, potArrays) {
+  // 6 teams per player: 2 from pot1, 2 from pot2, 1 from pot3, 1 from pot4
+  const [pot1, pot2, pot3, pot4] = potArrays
+
+  // Build usage queues - shuffle and repeat until we have enough
+  function buildQueue(pot, teamsNeeded) {
+    const queue = []
+    while (queue.length < teamsNeeded) {
+      queue.push(...shuffle([...pot]))
+    }
+    return queue
+  }
+
+  const playerCount = valid.length
+  let attempts = 0
+
+  while (attempts < 1000) {
+    // Build queues with enough teams for all players
+    const q1a = buildQueue(pot1, playerCount) // first pot1 pick
+    const q1b = buildQueue(pot1, playerCount) // second pot1 pick
+    const q2a = buildQueue(pot2, playerCount) // first pot2 pick
+    const q2b = buildQueue(pot2, playerCount) // second pot2 pick
+    const q3  = buildQueue(pot3, playerCount)
+    const q4  = buildQueue(pot4, playerCount)
+
+    const result = {}
+    const usedCombos = new Set()
+    let failed = false
+
+    for (let i = 0; i < playerCount; i++) {
+      let playerTeams = null
+      let innerAttempts = 0
+
+      while (innerAttempts < 200) {
+        // Pick from queues at position i, with some randomness
+        const offset = Math.floor(Math.random() * pot1.length)
+        const t1a = q1a[(i + offset) % q1a.length]
+        const t1b = q1b[(i + offset + 1) % q1b.length]
+        const t2a = q2a[(i + offset) % q2a.length]
+        const t2b = q2b[(i + offset + 1) % q2b.length]
+        const t3  = q3[(i + offset) % q3.length]
+        const t4  = q4[(i + offset) % q4.length]
+
+        const candidate = [t1a, t1b, t2a, t2b, t3, t4]
+
+        // No duplicate teams within a player's hand
+        const names = candidate.map(t => t.name)
+        if (new Set(names).size !== 6) { innerAttempts++; continue }
+
+        // No two teams from same group
+        const groups = candidate.map(t => t.group)
+        if (new Set(groups).size !== 6) { innerAttempts++; continue }
+
+        // No duplicate combinations
+        const comboKey = names.sort().join('|')
+        if (usedCombos.has(comboKey)) { innerAttempts++; continue }
+
+        playerTeams = [t1a, t1b, t2a, t2b, t3, t4]
+        usedCombos.add(comboKey)
+        break
+      }
+
+      if (!playerTeams) { failed = true; break }
+      result[valid[i]] = playerTeams
+    }
+
+    if (!failed) return { success: true, result }
+    attempts++
+  }
+
+  return { success: false, result: {} }
+}
+
+function assignTeamsLargeGroup(valid, potArrays) {
+  // 4 teams per player: 1 from each pot
+  const playerCount = valid.length
+  let attempts = 0
+
+  while (attempts < 1000) {
+    const result = {}
+    const usedCombos = new Set()
+    let failed = false
+
+    for (let i = 0; i < playerCount; i++) {
+      let playerTeams = null
+      let innerAttempts = 0
+
+      while (innerAttempts < 200) {
+        const candidate = potArrays.map(pot => pot[Math.floor(Math.random() * pot.length)])
+
+        // No two teams from same group
+        const groups = candidate.map(t => t.group)
+        if (new Set(groups).size !== 4) { innerAttempts++; continue }
+
+        // No duplicate combinations
+        const comboKey = candidate.map(t => t.name).sort().join('|')
+        if (usedCombos.has(comboKey)) { innerAttempts++; continue }
+
+        playerTeams = candidate
+        usedCombos.add(comboKey)
+        break
+      }
+
+      if (!playerTeams) { failed = true; break }
+      result[valid[i]] = playerTeams
+    }
+
+    if (!failed) return { success: true, result }
+    attempts++
+  }
+
+  return { success: false, result: {} }
+}
+
 export default function AdminPanel({ assignments, onLogout }) {
   const [players, setPlayers] = useState([''])
   const [drawing, setDrawing] = useState(false)
@@ -23,86 +137,15 @@ export default function AdminPanel({ assignments, onLogout }) {
     setDrawError('')
 
     const potArrays = Object.values(POTS)
-    const pot1 = potArrays[0]
-    const pot2 = potArrays[1]
-    const pot3 = potArrays[2]
-    const pot4 = potArrays[3]
     const playerCount = valid.length
-    const restrictPots12 = playerCount < 12
+    const smallGroup = playerCount < 12
 
-    let result = {}
-    let attempts = 0
-    let success = false
-
-    while (attempts < 1000 && !success) {
-      result = {}
-      const usedCombos = new Set()
-      const usedPot1 = new Set()
-      const usedPot2 = new Set()
-      let failed = false
-
-      // Shuffle all pots for randomness
-      const sp1 = shuffle([...pot1])
-      const sp2 = shuffle([...pot2])
-      const sp3 = shuffle([...pot3])
-      const sp4 = shuffle([...pot4])
-
-      for (let i = 0; i < valid.length; i++) {
-        let playerTeams = null
-        let innerAttempts = 0
-
-        while (innerAttempts < 200) {
-          // Pick from each pot
-          const t1 = sp1[Math.floor(Math.random() * sp1.length)]
-          const t2 = sp2[Math.floor(Math.random() * sp2.length)]
-          const t3 = sp3[Math.floor(Math.random() * sp3.length)]
-          const t4 = sp4[Math.floor(Math.random() * sp4.length)]
-          const candidate = [t1, t2, t3, t4]
-
-          // Rule 1: no two teams from same group
-          const groups = candidate.map(t => t.group)
-          if (new Set(groups).size !== 4) {
-            innerAttempts++
-            continue
-          }
-
-          // Rule 2: if < 12 players, no repeat pot 1 or pot 2 teams
-          if (restrictPots12) {
-            if (usedPot1.has(t1.name) || usedPot2.has(t2.name)) {
-              innerAttempts++
-              continue
-            }
-          }
-
-          // Rule 3: no duplicate 4-team combinations
-          const comboKey = candidate.map(t => t.name).sort().join('|')
-          if (usedCombos.has(comboKey)) {
-            innerAttempts++
-            continue
-          }
-
-          playerTeams = candidate
-          usedCombos.add(comboKey)
-          if (restrictPots12) {
-            usedPot1.add(t1.name)
-            usedPot2.add(t2.name)
-          }
-          break
-        }
-
-        if (!playerTeams) {
-          failed = true
-          break
-        }
-        result[valid[i]] = playerTeams
-      }
-
-      if (!failed) success = true
-      attempts++
-    }
+    const { success, result } = smallGroup
+      ? assignTeamsSmallGroup(valid, potArrays)
+      : assignTeamsLargeGroup(valid, potArrays)
 
     if (!success) {
-      setDrawError('Could not find a valid draw. Try with fewer players or check group constraints.')
+      setDrawError('Could not find a valid draw. Try with fewer players.')
       setDrawing(false)
       return
     }
@@ -127,6 +170,8 @@ export default function AdminPanel({ assignments, onLogout }) {
   }
 
   const hasAssignments = Object.keys(assignments).length > 0
+  const playerCount = players.filter(p => p.trim()).length
+  const smallGroup = playerCount < 12
 
   return (
     <div style={s.panel}>
@@ -155,11 +200,18 @@ export default function AdminPanel({ assignments, onLogout }) {
             ))}
           </div>
           <button style={s.ghostBtn} onClick={addPlayer}>+ Add Player</button>
+          {playerCount >= 2 && (
+            <p style={{ color: 'rgba(255,215,0,0.6)', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+              {smallGroup
+                ? `${playerCount} players → 6 teams each (2 from Pot 1, 2 from Pot 2, 1 from Pot 3, 1 from Pot 4)`
+                : `${playerCount} players → 4 teams each (1 per pot)`}
+            </p>
+          )}
           {drawError && <p style={{ color: '#ff6b6b', fontSize: 12, marginTop: 8 }}>{drawError}</p>}
           <button
-            style={{ ...s.primaryBtn, opacity: players.filter(p => p.trim()).length < 2 ? 0.4 : 1, marginTop: 16 }}
+            style={{ ...s.primaryBtn, opacity: playerCount < 2 ? 0.4 : 1, marginTop: 16 }}
             onClick={runDraw}
-            disabled={players.filter(p => p.trim()).length < 2 || drawing}
+            disabled={playerCount < 2 || drawing}
           >
             {drawing ? 'Drawing…' : '🎲 Run the Draw'}
           </button>
