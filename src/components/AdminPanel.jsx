@@ -5,103 +5,118 @@ import { ref, set, remove } from 'firebase/database'
 import s from '../styles'
 
 function assignTeamsSmallGroup(valid, potArrays) {
-  // 6 teams per player: 2 from pot1, 2 from pot2, 1 from pot3, 1 from pot4
   const [pot1, pot2, pot3, pot4] = potArrays
-
-  // Build usage queues - shuffle and repeat until we have enough
-  function buildQueue(pot, teamsNeeded) {
-    const queue = []
-    while (queue.length < teamsNeeded) {
-      queue.push(...shuffle([...pot]))
-    }
-    return queue
-  }
-
   const playerCount = valid.length
-  let attempts = 0
 
-  while (attempts < 1000) {
-    // Build queues with enough teams for all players
-    const q1a = buildQueue(pot1, playerCount) // first pot1 pick
-    const q1b = buildQueue(pot1, playerCount) // second pot1 pick
-    const q2a = buildQueue(pot2, playerCount) // first pot2 pick
-    const q2b = buildQueue(pot2, playerCount) // second pot2 pick
-    const q3  = buildQueue(pot3, playerCount)
-    const q4  = buildQueue(pot4, playerCount)
+  for (let attempt = 0; attempt < 2000; attempt++) {
+    // Shuffle all pots fresh each attempt
+    const sp1 = shuffle([...pot1])
+    const sp2 = shuffle([...pot2])
+    const sp3 = shuffle([...pot3])
+    const sp4 = shuffle([...pot4])
+
+    // Build pool of valid pot1 pairs (no same group between the two)
+    const pot1Pairs = []
+    for (let i = 0; i < sp1.length; i++) {
+      for (let j = i + 1; j < sp1.length; j++) {
+        if (sp1[i].group !== sp1[j].group) {
+          pot1Pairs.push([sp1[i], sp1[j]])
+        }
+      }
+    }
+
+    // Build pool of valid pot2 pairs (no same group between the two)
+    const pot2Pairs = []
+    for (let i = 0; i < sp2.length; i++) {
+      for (let j = i + 1; j < sp2.length; j++) {
+        if (sp2[i].group !== sp2[j].group) {
+          pot2Pairs.push([sp2[i], sp2[j]])
+        }
+      }
+    }
+
+    const shuffledP1Pairs = shuffle(pot1Pairs)
+    const shuffledP2Pairs = shuffle(pot2Pairs)
 
     const result = {}
     const usedCombos = new Set()
+    const usedPot1Teams = new Set()
+    const usedPot2Teams = new Set()
     let failed = false
 
     for (let i = 0; i < playerCount; i++) {
       let playerTeams = null
-      let innerAttempts = 0
 
-      while (innerAttempts < 200) {
-        // Pick from queues at position i, with some randomness
-        const offset = Math.floor(Math.random() * pot1.length)
-        const t1a = q1a[(i + offset) % q1a.length]
-        const t1b = q1b[(i + offset + 1) % q1b.length]
-        const t2a = q2a[(i + offset) % q2a.length]
-        const t2b = q2b[(i + offset + 1) % q2b.length]
-        const t3  = q3[(i + offset) % q3.length]
-        const t4  = q4[(i + offset) % q4.length]
+      // Find a valid pot1 pair not using already used teams
+      const p1pair = shuffledP1Pairs.find(([a, b]) =>
+        !usedPot1Teams.has(a.name) && !usedPot1Teams.has(b.name)
+      )
+      if (!p1pair) { failed = true; break }
 
-        const candidate = [t1a, t1b, t2a, t2b, t3, t4]
+      // Find a valid pot2 pair not using already used teams
+      const p2pair = shuffledP2Pairs.find(([a, b]) =>
+        !usedPot2Teams.has(a.name) && !usedPot2Teams.has(b.name)
+      )
+      if (!p2pair) { failed = true; break }
 
-        // No duplicate teams within a player's hand
-        const names = candidate.map(t => t.name)
-        if (new Set(names).size !== 6) { innerAttempts++; continue }
+      // Try pot3 and pot4 picks that don't clash with chosen groups
+      const usedGroups = new Set([
+        p1pair[0].group, p1pair[1].group,
+        p2pair[0].group, p2pair[1].group,
+      ])
 
-        // No two teams from same group
-        const groups = candidate.map(t => t.group)
-        if (new Set(groups).size !== 6) { innerAttempts++; continue }
+      const t3 = sp3.find(t => !usedGroups.has(t.group))
+      if (!t3) { failed = true; break }
+      usedGroups.add(t3.group)
 
-        // No duplicate combinations
-        const comboKey = names.sort().join('|')
-        if (usedCombos.has(comboKey)) { innerAttempts++; continue }
+      const t4 = sp4.find(t => !usedGroups.has(t.group))
+      if (!t4) { failed = true; break }
 
-        playerTeams = [t1a, t1b, t2a, t2b, t3, t4]
-        usedCombos.add(comboKey)
-        break
-      }
+      const candidate = [p1pair[0], p1pair[1], p2pair[0], p2pair[1], t3, t4]
+      const names = candidate.map(t => t.name)
+      const comboKey = [...names].sort().join('|')
 
-      if (!playerTeams) { failed = true; break }
+      if (usedCombos.has(comboKey)) { failed = true; break }
+
+      playerTeams = candidate
+      usedCombos.add(comboKey)
+      usedPot1Teams.add(p1pair[0].name)
+      usedPot1Teams.add(p1pair[1].name)
+      usedPot2Teams.add(p2pair[0].name)
+      usedPot2Teams.add(p2pair[1].name)
+
+      // Remove used pairs from pools so next player gets different teams
+      const p1idx = shuffledP1Pairs.indexOf(p1pair)
+      shuffledP1Pairs.splice(p1idx, 1)
+      const p2idx = shuffledP2Pairs.indexOf(p2pair)
+      shuffledP2Pairs.splice(p2idx, 1)
+
       result[valid[i]] = playerTeams
     }
 
     if (!failed) return { success: true, result }
-    attempts++
   }
 
   return { success: false, result: {} }
 }
 
 function assignTeamsLargeGroup(valid, potArrays) {
-  // 4 teams per player: 1 from each pot
   const playerCount = valid.length
-  let attempts = 0
 
-  while (attempts < 1000) {
+  for (let attempt = 0; attempt < 1000; attempt++) {
     const result = {}
     const usedCombos = new Set()
     let failed = false
 
     for (let i = 0; i < playerCount; i++) {
       let playerTeams = null
-      let innerAttempts = 0
 
-      while (innerAttempts < 200) {
+      for (let inner = 0; inner < 200; inner++) {
         const candidate = potArrays.map(pot => pot[Math.floor(Math.random() * pot.length)])
-
-        // No two teams from same group
         const groups = candidate.map(t => t.group)
-        if (new Set(groups).size !== 4) { innerAttempts++; continue }
-
-        // No duplicate combinations
+        if (new Set(groups).size !== 4) continue
         const comboKey = candidate.map(t => t.name).sort().join('|')
-        if (usedCombos.has(comboKey)) { innerAttempts++; continue }
-
+        if (usedCombos.has(comboKey)) continue
         playerTeams = candidate
         usedCombos.add(comboKey)
         break
@@ -112,7 +127,6 @@ function assignTeamsLargeGroup(valid, potArrays) {
     }
 
     if (!failed) return { success: true, result }
-    attempts++
   }
 
   return { success: false, result: {} }
