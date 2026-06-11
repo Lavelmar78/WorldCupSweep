@@ -15,17 +15,73 @@ const TAB_LABELS = {
   teams:       '👥 Teams',
   fixtures:    '📅 Fixtures',
   knockout:    '⚔️ Knockout',
+  paytable:    '💰 Prizes',
   admin:       '🔑 Admin',
 }
 
+function Paytable() {
+  return (
+    <div style={s.panel}>
+      <div style={s.paytableCard}>
+        <div style={s.paytableTitle}>🏆 Prize Structure</div>
+        <div style={s.paytableSubtitle}>€200 total pot · 10 players · €20 entry</div>
+        <div style={s.paytableRow}>
+          <span style={s.paytableMedal}>🥇</span>
+          <span style={s.paytablePlace}>1st Place</span>
+          <span style={s.paytableAmount}>€100</span>
+        </div>
+        <div style={s.paytableRow}>
+          <span style={s.paytableMedal}>🥈</span>
+          <span style={s.paytablePlace}>2nd Place</span>
+          <span style={s.paytableAmount}>€60</span>
+        </div>
+        <div style={s.paytableRow}>
+          <span style={s.paytableMedal}>🥉</span>
+          <span style={s.paytablePlace}>3rd Place</span>
+          <span style={s.paytableAmount}>€40</span>
+        </div>
+      </div>
+
+      <div style={s.paytableCard}>
+        <div style={s.paytableTitle}>⚽ Points System</div>
+        {[
+          ['Group stage win', '2 pts'],
+          ['Group stage draw', '1 pt'],
+          ['Round of 32 win', '2 pts'],
+          ['Round of 16 win', '3 pts'],
+          ['Quarter-final win', '4 pts'],
+          ['Semi-final win', '5 pts'],
+          ['Final win', '6 pts'],
+        ].map(([label, pts]) => (
+          <div key={label} style={s.paytablePointRow}>
+            <span style={s.paytablePointLabel}>{label}</span>
+            <span style={s.paytablePointValue}>{pts}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={s.paytableCard}>
+        <div style={s.paytableTitle}>🔢 Tiebreakers</div>
+        {[
+          '1. Most goals scored across all your teams',
+          '2. Least goals conceded across all your teams',
+          '3. Prize split equally between tied players',
+        ].map(t => (
+          <p key={t} style={s.paytableTiebreak}>{t}</p>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
-  const [assignments, setAssignments]       = useState({})
-  const [teamPoints, setTeamPoints]         = useState({})
-  const [fixtureResults, setFixtureResults] = useState({})
+  const [assignments, setAssignments]           = useState({})
+  const [teamPoints, setTeamPoints]             = useState({})
+  const [fixtureResults, setFixtureResults]     = useState({})
   const [knockoutFixtures, setKnockoutFixtures] = useState({})
-  const [isAdmin, setIsAdmin]               = useState(false)
-  const [showLogin, setShowLogin]           = useState(false)
-  const [activeTab, setActiveTab]           = useState('leaderboard')
+  const [isAdmin, setIsAdmin]                   = useState(false)
+  const [showLogin, setShowLogin]               = useState(false)
+  const [activeTab, setActiveTab]               = useState('leaderboard')
 
   useEffect(() => {
     const u1 = onValue(ref(db, 'assignments'),      snap => setAssignments(snap.val() || {}))
@@ -50,8 +106,8 @@ export default function App() {
   }
 
   const tabs = isAdmin
-    ? ['leaderboard', 'teams', 'fixtures', 'knockout', 'admin']
-    : ['leaderboard', 'teams', 'fixtures', 'knockout']
+    ? ['leaderboard', 'teams', 'fixtures', 'knockout', 'paytable', 'admin']
+    : ['leaderboard', 'teams', 'fixtures', 'knockout', 'paytable']
 
   return (
     <div style={s.root}>
@@ -61,7 +117,8 @@ export default function App() {
 
       <div style={s.appHeader}>
         <div>
-          <div style={s.appTitle}>🏆 World Cup Sweep</div>
+          <div style={s.appTitle}>🏆 PAFC u10 Coach</div>
+          <div style={s.appTitle2}>World Cup Sweep</div>
           <div style={s.appSub}>Live Tracker</div>
         </div>
         {!isAdmin && (
@@ -107,6 +164,7 @@ export default function App() {
             isAdmin={isAdmin}
           />
         )}
+        {activeTab === 'paytable' && <Paytable />}
         {activeTab === 'admin' && isAdmin && (
           <AdminPanel assignments={assignments} onLogout={handleLogout} />
         )}
