@@ -5,7 +5,6 @@ import { ref, set, remove } from 'firebase/database'
 import s from '../styles'
 
 function buildDeck(pot, needed) {
-  // Shuffle the pot and repeat until we have enough cards
   const deck = []
   while (deck.length < needed) {
     deck.push(...shuffle([...pot]))
@@ -13,13 +12,20 @@ function buildDeck(pot, needed) {
   return deck
 }
 
+function countGroupClashes(teams) {
+  const groups = teams.map(t => t.group)
+  return groups.length - new Set(groups).size
+}
+
 function assignTeamsSmallGroup(valid, potArrays) {
   const [pot1, pot2, pot3, pot4] = potArrays
   const playerCount = valid.length
+  let bestResult = null
+  let bestClashes = Infinity
 
-  for (let attempt = 0; attempt < 2000; attempt++) {
-    // Deal cards from each pot — every team used once before repeats
-    const deck1 = buildDeck(pot1, playerCount * 2) // 2 picks per player
+  for (let attempt = 0; attempt < 500; attempt++) {
+    // Deal cards evenly - every team used once before repeats
+    const deck1 = buildDeck(pot1, playerCount * 2)
     const deck2 = buildDeck(pot2, playerCount * 2)
     const deck3 = buildDeck(pot3, playerCount)
     const deck4 = buildDeck(pot4, playerCount)
@@ -27,56 +33,42 @@ function assignTeamsSmallGroup(valid, potArrays) {
     const result = {}
     const usedCombos = new Set()
     let failed = false
-
-    // Pre-assign pot1 pairs from deck (consecutive pairs)
-    const pot1Assignments = []
-    for (let i = 0; i < playerCount; i++) {
-      pot1Assignments.push([deck1[i * 2], deck1[i * 2 + 1]])
-    }
-
-    // Pre-assign pot2 pairs from deck
-    const pot2Assignments = []
-    for (let i = 0; i < playerCount; i++) {
-      pot2Assignments.push([deck2[i * 2], deck2[i * 2 + 1]])
-    }
-
-    // Pre-assign pot3 and pot4 from deck
-    const pot3Assignments = deck3.slice(0, playerCount)
-    const pot4Assignments = deck4.slice(0, playerCount)
+    let totalClashes = 0
 
     for (let i = 0; i < playerCount; i++) {
-      const [t1a, t1b] = pot1Assignments[i]
-      const [t2a, t2b] = pot2Assignments[i]
-      const t3 = pot3Assignments[i]
-      const t4 = pot4Assignments[i]
+      const t1a = deck1[i * 2]
+      const t1b = deck1[i * 2 + 1]
+      const t2a = deck2[i * 2]
+      const t2b = deck2[i * 2 + 1]
+      const t3  = deck3[i]
+      const t4  = deck4[i]
 
       const candidate = [t1a, t1b, t2a, t2b, t3, t4]
       const names = candidate.map(t => t.name)
 
-      // Check no duplicate teams
+      // Must have 6 different teams
       if (new Set(names).size !== 6) { failed = true; break }
 
-      // Check t1a and t1b not same group
-      if (t1a.group === t1b.group) { failed = true; break }
-
-      // Check t2a and t2b not same group
-      if (t2a.group === t2b.group) { failed = true; break }
-
-      // Check all 6 teams from different groups
-      const groups = new Set([t1a.group, t1b.group, t2a.group, t2b.group, t3.group, t4.group])
-      if (groups.size !== 6) { failed = true; break }
-
-      // Check unique combination
+      // Must be unique combination
       const comboKey = [...names].sort().join('|')
       if (usedCombos.has(comboKey)) { failed = true; break }
 
       usedCombos.add(comboKey)
+      totalClashes += countGroupClashes(candidate)
       result[valid[i]] = candidate
     }
 
-    if (!failed) return { success: true, result }
+    if (!failed) {
+      if (totalClashes < bestClashes) {
+        bestClashes = totalClashes
+        bestResult = { ...result }
+      }
+      // If no clashes at all, we're done
+      if (bestClashes === 0) break
+    }
   }
 
+  if (bestResult) return { success: true, result: bestResult }
   return { success: false, result: {} }
 }
 
