@@ -1,12 +1,9 @@
 import { useState } from 'react'
-import { TEAM_MAP, getBestThirdPlace, ROUND_LABELS } from '../data'
+import { TEAM_MAP, ROUND_LABELS } from '../data'
 import { db } from '../firebase'
 import { ref, set } from 'firebase/database'
 import s from '../styles'
 
-// 2026 World Cup Round of 32 bracket structure
-// Based on official FIFA bracket: group winners and runners-up
-// plus 8 best third place teams
 const R32_SLOTS = [
   { id: 'R32_1',  home: '1A', away: '2B' },
   { id: 'R32_2',  home: '1B', away: '2A' },
@@ -42,31 +39,10 @@ const R32_SLOTS = [
   { id: 'R32_32', home: '2F', away: '3best' },
 ]
 
-function resolveSlot(slot, standings, bestThird, confirmed) {
-  if (confirmed?.[slot]) return confirmed[slot]
-  if (!slot) return null
-
-  if (slot.startsWith('W_')) {
-    const fixtureId = slot.replace('W_', '')
-    return confirmed?.[fixtureId + '_winner'] || null
-  }
-
-  const match = slot.match(/^([123])([A-L])$/)
-  if (match) {
-    const pos = parseInt(match[1]) - 1
-    const group = match[2]
-    return standings[group]?.[pos]?.name || null
-  }
-
-  if (slot === '3best') return null // handled separately
-
-  return null
-}
-
 async function saveKnockoutResult(fixtureId, home, away, homeScore, awayScore, round) {
   const hs = Number(homeScore)
   const as = Number(awayScore)
-  if (hs === as) return // no draws in knockout
+  if (hs === as) return
 
   const winner = hs > as ? home : away
   const loser  = hs > as ? away : home
@@ -165,19 +141,28 @@ function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
   )
 }
 
-function ThirdPlaceConfirm({ bestThird, confirmed, isAdmin, knockoutFixtures }) {
+function ThirdPlaceConfirm({ bestThird, isAdmin, knockoutFixtures }) {
   const allGroupsDone = bestThird.length >= 8
+  const isConfirmed = knockoutFixtures?.thirdPlaceConfirmed
+  const [confirmingUndo, setConfirmingUndo] = useState(false)
 
   async function confirm() {
-    const slots = {}
-    bestThird.slice(0, 8).forEach((t, i) => {
-      slots[`3rd_${i}`] = t.name
-    })
     await set(ref(db, 'knockoutFixtures/thirdPlaceConfirmed'), true)
     await set(ref(db, 'knockoutFixtures/thirdPlaceTeams'), bestThird.slice(0, 8).map(t => t.name))
   }
 
-  const isConfirmed = knockoutFixtures?.thirdPlaceConfirmed
+  async function unconfirm() {
+    // Check if any R32 results have been entered already
+    const hasResults = Object.keys(knockoutFixtures || {}).some(k => k.startsWith('R32_') && k.endsWith('_winner'))
+    if (hasResults) {
+      alert('Cannot unconfirm: Round of 32 results have already been entered. Clear those results first.')
+      setConfirmingUndo(false)
+      return
+    }
+    await set(ref(db, 'knockoutFixtures/thirdPlaceConfirmed'), null)
+    await set(ref(db, 'knockoutFixtures/thirdPlaceTeams'), null)
+    setConfirmingUndo(false)
+  }
 
   return (
     <div style={s.thirdPlaceBox}>
@@ -197,7 +182,31 @@ function ThirdPlaceConfirm({ bestThird, confirmed, isAdmin, knockoutFixtures }) 
           ✅ Confirm & Generate Round of 32
         </button>
       )}
-      {isConfirmed && (
+      {isConfirmed && isAdmin && !confirmingUndo && (
+        <>
+          <p style={{ color: '#6ddc6d', fontSize: 12, marginTop: 8 }}>
+            ✅ Third place teams confirmed
+          </p>
+          <button
+            style={{ ...s.ghostBtn, color: '#ff6b6b', borderColor: 'rgba(255,80,80,0.3)', marginTop: 8 }}
+            onClick={() => setConfirmingUndo(true)}
+          >
+            ↩ Unconfirm
+          </button>
+        </>
+      )}
+      {isConfirmed && isAdmin && confirmingUndo && (
+        <div style={{ ...s.confirmBox, marginTop: 8 }}>
+          <p style={s.confirmText}>
+            This will undo the third-place confirmation and clear the Round of 32 bracket. Only possible if no R32 results have been entered yet.
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button style={{ ...s.miniBtn, ...s.btnL, padding: '8px 16px' }} onClick={unconfirm}>Yes, unconfirm</button>
+            <button style={{ ...s.miniBtn, ...s.btnUndo, padding: '8px 16px' }} onClick={() => setConfirmingUndo(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {isConfirmed && !isAdmin && (
         <p style={{ color: '#6ddc6d', fontSize: 12, marginTop: 8 }}>
           ✅ Third place teams confirmed
         </p>
@@ -218,7 +227,6 @@ export default function Knockout({
   const thirdPlaceTeams = knockoutFixtures?.thirdPlaceTeams || []
   const thirdPlaceConfirmed = knockoutFixtures?.thirdPlaceConfirmed
 
-  // Build R32 fixtures with resolved team names
   function resolveTeam(slot, thirdIndex) {
     if (!slot) return null
     const match = slot.match(/^([12])([A-L])$/)
@@ -230,14 +238,9 @@ export default function Knockout({
     if (slot === '3best') {
       return thirdPlaceTeams[thirdIndex] || null
     }
-    if (slot.startsWith('W_')) {
-      const id = slot.replace('W_', '')
-      return knockoutFixtures?.[id + '_winner'] || null
-    }
     return null
   }
 
-  // Generate R32 matches - pair group qualifiers with third place teams
   let thirdIdx = 0
   const r32Matches = []
   for (let i = 1; i <= 32; i++) {
@@ -248,7 +251,6 @@ export default function Knockout({
     r32Matches.push({ id: slot.id, home, away })
   }
 
-  // Generate R16 from R32 winners
   const r16Matches = []
   for (let i = 0; i < 16; i++) {
     const m1 = r32Matches[i * 2]
@@ -259,7 +261,6 @@ export default function Knockout({
     r16Matches.push({ id: `R16_${i + 1}`, home, away })
   }
 
-  // Generate QF from R16 winners
   const qfMatches = []
   for (let i = 0; i < 8; i++) {
     const m1 = r16Matches[i * 2]
@@ -270,7 +271,6 @@ export default function Knockout({
     qfMatches.push({ id: `QF_${i + 1}`, home, away })
   }
 
-  // Generate SF from QF winners
   const sfMatches = []
   for (let i = 0; i < 4; i++) {
     const m1 = qfMatches[i * 2]
@@ -281,11 +281,10 @@ export default function Knockout({
     sfMatches.push({ id: `SF_${i + 1}`, home, away })
   }
 
-  // Final
   const finalMatch = {
     id: 'FINAL',
-    home: knockoutFixtures?.['SF_1_winner'] || knockoutFixtures?.['SF_2_winner'] ? knockoutFixtures?.['SF_1_winner'] : null,
-    away: knockoutFixtures?.['SF_3_winner'] || knockoutFixtures?.['SF_4_winner'] ? knockoutFixtures?.['SF_3_winner'] : null,
+    home: knockoutFixtures?.['SF_1_winner'] || null,
+    away: knockoutFixtures?.['SF_3_winner'] || null,
   }
 
   const rounds = [
@@ -300,7 +299,6 @@ export default function Knockout({
     <div style={s.panel}>
       <ThirdPlaceConfirm
         bestThird={bestThird}
-        confirmed={knockoutFixtures?.thirdPlaceConfirmed}
         isAdmin={isAdmin}
         knockoutFixtures={knockoutFixtures}
       />
