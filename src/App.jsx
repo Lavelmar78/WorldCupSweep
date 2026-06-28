@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { db } from './firebase'
 import { ref, onValue } from 'firebase/database'
-import { calcGroupStandings, getBestThirdPlace } from './data'
 import AdminLogin from './components/AdminLogin'
 import AdminPanel from './components/AdminPanel'
 import Leaderboard from './components/Leaderboard'
@@ -91,9 +90,6 @@ export default function App() {
     return () => { u1(); u2(); u3(); u4() }
   }, [])
 
-  const standings = calcGroupStandings(fixtureResults)
-  const bestThird = getBestThirdPlace(standings)
-
   function handleLogin() {
     setIsAdmin(true)
     setShowLogin(false)
@@ -156,11 +152,8 @@ export default function App() {
         )}
         {activeTab === 'knockout' && (
           <Knockout
-            standings={standings}
-            bestThird={bestThird}
             fixtureResults={fixtureResults}
             knockoutFixtures={knockoutFixtures}
-            teamPoints={teamPoints}
             isAdmin={isAdmin}
           />
         )}
