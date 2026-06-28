@@ -1,42 +1,27 @@
 import { useState } from 'react'
-import { TEAM_MAP, ROUND_LABELS } from '../data'
+import { TEAM_MAP } from '../data'
 import { db } from '../firebase'
 import { ref, set } from 'firebase/database'
 import s from '../styles'
 
-const R32_SLOTS = [
-  { id: 'R32_1',  home: '1A', away: '2B' },
-  { id: 'R32_2',  home: '1B', away: '2A' },
-  { id: 'R32_3',  home: '1C', away: '2D' },
-  { id: 'R32_4',  home: '1D', away: '2C' },
-  { id: 'R32_5',  home: '1E', away: '2F' },
-  { id: 'R32_6',  home: '1F', away: '2E' },
-  { id: 'R32_7',  home: '1G', away: '2H' },
-  { id: 'R32_8',  home: '1H', away: '2G' },
-  { id: 'R32_9',  home: '1I', away: '2J' },
-  { id: 'R32_10', home: '1J', away: '2I' },
-  { id: 'R32_11', home: '1K', away: '2L' },
-  { id: 'R32_12', home: '1L', away: '2K' },
-  { id: 'R32_13', home: '1A', away: '3best' },
-  { id: 'R32_14', home: '1C', away: '3best' },
-  { id: 'R32_15', home: '1E', away: '3best' },
-  { id: 'R32_16', home: '1G', away: '3best' },
-  { id: 'R32_17', home: '1I', away: '3best' },
-  { id: 'R32_18', home: '1K', away: '3best' },
-  { id: 'R32_19', home: '1B', away: '3best' },
-  { id: 'R32_20', home: '1D', away: '3best' },
-  { id: 'R32_21', home: '1F', away: '3best' },
-  { id: 'R32_22', home: '1H', away: '3best' },
-  { id: 'R32_23', home: '1J', away: '3best' },
-  { id: 'R32_24', home: '1L', away: '3best' },
-  { id: 'R32_25', home: '2C', away: '3best' },
-  { id: 'R32_26', home: '2E', away: '3best' },
-  { id: 'R32_27', home: '2G', away: '3best' },
-  { id: 'R32_28', home: '2I', away: '3best' },
-  { id: 'R32_29', home: '2K', away: '3best' },
-  { id: 'R32_30', home: '2B', away: '3best' },
-  { id: 'R32_31', home: '2D', away: '3best' },
-  { id: 'R32_32', home: '2F', away: '3best' },
+// Official confirmed 2026 World Cup Round of 32 bracket
+const R32_FIXTURES = [
+  { id: 'R32_1',  home: 'South Africa', away: 'Canada' },
+  { id: 'R32_2',  home: 'Brazil',       away: 'Japan' },
+  { id: 'R32_3',  home: 'Germany',      away: 'Paraguay' },
+  { id: 'R32_4',  home: 'Netherlands',  away: 'Morocco' },
+  { id: 'R32_5',  home: 'Ivory Coast',  away: 'Norway' },
+  { id: 'R32_6',  home: 'France',       away: 'Sweden' },
+  { id: 'R32_7',  home: 'Mexico',       away: 'Ecuador' },
+  { id: 'R32_8',  home: 'England',      away: 'DR Congo' },
+  { id: 'R32_9',  home: 'Belgium',      away: 'Senegal' },
+  { id: 'R32_10', home: 'USA',          away: 'Bosnia & Herzegovina' },
+  { id: 'R32_11', home: 'Spain',        away: 'Austria' },
+  { id: 'R32_12', home: 'Switzerland',  away: 'Algeria' },
+  { id: 'R32_13', home: 'Portugal',     away: 'Croatia' },
+  { id: 'R32_14', home: 'Australia',    away: 'Egypt' },
+  { id: 'R32_15', home: 'Argentina',    away: 'Cape Verde' },
+  { id: 'R32_16', home: 'Colombia',     away: 'Ghana' },
 ]
 
 async function saveKnockoutResult(fixtureId, home, away, homeScore, awayScore, round) {
@@ -141,118 +126,11 @@ function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
   )
 }
 
-function ThirdPlaceConfirm({ bestThird, isAdmin, knockoutFixtures }) {
-  const allGroupsDone = bestThird.length >= 8
-  const isConfirmed = knockoutFixtures?.thirdPlaceConfirmed
-  const [confirmingUndo, setConfirmingUndo] = useState(false)
-
-  async function confirm() {
-    await set(ref(db, 'knockoutFixtures/thirdPlaceConfirmed'), true)
-    await set(ref(db, 'knockoutFixtures/thirdPlaceTeams'), bestThird.slice(0, 8).map(t => t.name))
-  }
-
-  async function unconfirm() {
-    // Check if any R32 results have been entered already
-    const hasResults = Object.keys(knockoutFixtures || {}).some(k => k.startsWith('R32_') && k.endsWith('_winner'))
-    if (hasResults) {
-      alert('Cannot unconfirm: Round of 32 results have already been entered. Clear those results first.')
-      setConfirmingUndo(false)
-      return
-    }
-    await set(ref(db, 'knockoutFixtures/thirdPlaceConfirmed'), null)
-    await set(ref(db, 'knockoutFixtures/thirdPlaceTeams'), null)
-    setConfirmingUndo(false)
-  }
-
-  return (
-    <div style={s.thirdPlaceBox}>
-      <div style={s.sectionLabel}>8 BEST THIRD PLACE TEAMS</div>
-      {bestThird.slice(0, 8).map((t, i) => (
-        <div key={t.name} style={s.thirdPlaceRow}>
-          <span style={{ fontSize: 16 }}>#{i + 1}</span>
-          <span style={{ fontSize: 18 }}>{TEAM_MAP[t.name]?.flag}</span>
-          <span style={{ color: '#fff', fontSize: 13, flex: 1 }}>{t.name}</span>
-          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>
-            Grp {t.group} · {t.pts}pts · {t.gd > 0 ? '+' : ''}{t.gd} GD
-          </span>
-        </div>
-      ))}
-      {isAdmin && allGroupsDone && !isConfirmed && (
-        <button style={{ ...s.primaryBtn, marginTop: 12 }} onClick={confirm}>
-          ✅ Confirm & Generate Round of 32
-        </button>
-      )}
-      {isConfirmed && isAdmin && !confirmingUndo && (
-        <>
-          <p style={{ color: '#6ddc6d', fontSize: 12, marginTop: 8 }}>
-            ✅ Third place teams confirmed
-          </p>
-          <button
-            style={{ ...s.ghostBtn, color: '#ff6b6b', borderColor: 'rgba(255,80,80,0.3)', marginTop: 8 }}
-            onClick={() => setConfirmingUndo(true)}
-          >
-            ↩ Unconfirm
-          </button>
-        </>
-      )}
-      {isConfirmed && isAdmin && confirmingUndo && (
-        <div style={{ ...s.confirmBox, marginTop: 8 }}>
-          <p style={s.confirmText}>
-            This will undo the third-place confirmation and clear the Round of 32 bracket. Only possible if no R32 results have been entered yet.
-          </p>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...s.miniBtn, ...s.btnL, padding: '8px 16px' }} onClick={unconfirm}>Yes, unconfirm</button>
-            <button style={{ ...s.miniBtn, ...s.btnUndo, padding: '8px 16px' }} onClick={() => setConfirmingUndo(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
-      {isConfirmed && !isAdmin && (
-        <p style={{ color: '#6ddc6d', fontSize: 12, marginTop: 8 }}>
-          ✅ Third place teams confirmed
-        </p>
-      )}
-      {!allGroupsDone && (
-        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 8 }}>
-          Waiting for all group stage results…
-        </p>
-      )}
-    </div>
-  )
-}
-
-export default function Knockout({
-  standings, bestThird, fixtureResults,
-  knockoutFixtures, teamPoints, isAdmin
-}) {
-  const thirdPlaceTeams = knockoutFixtures?.thirdPlaceTeams || []
-  const thirdPlaceConfirmed = knockoutFixtures?.thirdPlaceConfirmed
-
-  function resolveTeam(slot, thirdIndex) {
-    if (!slot) return null
-    const match = slot.match(/^([12])([A-L])$/)
-    if (match) {
-      const pos = parseInt(match[1]) - 1
-      const group = match[2]
-      return standings[group]?.[pos]?.name || null
-    }
-    if (slot === '3best') {
-      return thirdPlaceTeams[thirdIndex] || null
-    }
-    return null
-  }
-
-  let thirdIdx = 0
-  const r32Matches = []
-  for (let i = 1; i <= 32; i++) {
-    const slot = R32_SLOTS[i - 1]
-    if (!slot) continue
-    let home = resolveTeam(slot.home, slot.home === '3best' ? thirdIdx++ : 0)
-    let away = resolveTeam(slot.away, slot.away === '3best' ? thirdIdx++ : 0)
-    r32Matches.push({ id: slot.id, home, away })
-  }
+export default function Knockout({ fixtureResults, knockoutFixtures, isAdmin }) {
+  const r32Matches = R32_FIXTURES
 
   const r16Matches = []
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < 8; i++) {
     const m1 = r32Matches[i * 2]
     const m2 = r32Matches[i * 2 + 1]
     if (!m1 || !m2) continue
@@ -262,7 +140,7 @@ export default function Knockout({
   }
 
   const qfMatches = []
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 4; i++) {
     const m1 = r16Matches[i * 2]
     const m2 = r16Matches[i * 2 + 1]
     if (!m1 || !m2) continue
@@ -272,7 +150,7 @@ export default function Knockout({
   }
 
   const sfMatches = []
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 2; i++) {
     const m1 = qfMatches[i * 2]
     const m2 = qfMatches[i * 2 + 1]
     if (!m1 || !m2) continue
@@ -284,26 +162,20 @@ export default function Knockout({
   const finalMatch = {
     id: 'FINAL',
     home: knockoutFixtures?.['SF_1_winner'] || null,
-    away: knockoutFixtures?.['SF_3_winner'] || null,
+    away: knockoutFixtures?.['SF_2_winner'] || null,
   }
 
   const rounds = [
-    { label: 'ROUND OF 32', matches: r32Matches,  round: 'r32',   show: thirdPlaceConfirmed },
-    { label: 'ROUND OF 16', matches: r16Matches,  round: 'r16',   show: thirdPlaceConfirmed },
-    { label: 'QUARTER-FINALS', matches: qfMatches, round: 'qf',   show: thirdPlaceConfirmed },
-    { label: 'SEMI-FINALS',  matches: sfMatches,  round: 'sf',    show: thirdPlaceConfirmed },
-    { label: 'FINAL',        matches: [finalMatch], round: 'final', show: thirdPlaceConfirmed },
+    { label: 'ROUND OF 32', matches: r32Matches, round: 'r32' },
+    { label: 'ROUND OF 16', matches: r16Matches, round: 'r16' },
+    { label: 'QUARTER-FINALS', matches: qfMatches, round: 'qf' },
+    { label: 'SEMI-FINALS', matches: sfMatches, round: 'sf' },
+    { label: 'FINAL', matches: [finalMatch], round: 'final' },
   ]
 
   return (
     <div style={s.panel}>
-      <ThirdPlaceConfirm
-        bestThird={bestThird}
-        isAdmin={isAdmin}
-        knockoutFixtures={knockoutFixtures}
-      />
-
-      {rounds.map(({ label, matches, round, show }) => show ? (
+      {rounds.map(({ label, matches, round }) => (
         <div key={round}>
           <div style={s.sectionLabel}>{label}</div>
           {matches.map(m => (
@@ -318,7 +190,7 @@ export default function Knockout({
             />
           ))}
         </div>
-      ) : null)}
+      ))}
     </div>
   )
 }
