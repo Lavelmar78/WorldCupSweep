@@ -4,7 +4,6 @@ import { db } from '../firebase'
 import { ref, set } from 'firebase/database'
 import s from '../styles'
 
-// Official confirmed 2026 World Cup Round of 32 bracket
 const R32_FIXTURES = [
   { id: 'R32_1',  home: 'South Africa', away: 'Canada' },
   { id: 'R32_2',  home: 'Brazil',       away: 'Japan' },
@@ -24,17 +23,26 @@ const R32_FIXTURES = [
   { id: 'R32_16', home: 'Colombia',     away: 'Ghana' },
 ]
 
-async function saveKnockoutResult(fixtureId, home, away, homeScore, awayScore, round) {
+async function saveKnockoutResult(fixtureId, home, away, homeScore, awayScore, round, penaltyWinner) {
   const hs = Number(homeScore)
   const as = Number(awayScore)
-  if (hs === as) return
 
-  const winner = hs > as ? home : away
-  const loser  = hs > as ? away : home
+  let winner, loser
+  if (penaltyWinner) {
+    winner = penaltyWinner
+    loser = penaltyWinner === home ? away : home
+  } else {
+    if (hs === as) return // draw with no penalty winner specified - invalid
+    winner = hs > as ? home : away
+    loser = hs > as ? away : home
+  }
 
-  await set(ref(db, `fixtureResults/${fixtureId}`), { homeScore: hs, awayScore: as })
-  await set(ref(db, `teamPoints/${winner}/${round}`), { result: 'W', scored: hs > as ? hs : as, conceded: hs > as ? as : hs })
-  await set(ref(db, `teamPoints/${loser}/${round}`),  { result: 'E', scored: hs > as ? as : hs, conceded: hs > as ? hs : as })
+  const winnerScore = winner === home ? hs : as
+  const loserScore = winner === home ? as : hs
+
+  await set(ref(db, `fixtureResults/${fixtureId}`), { homeScore: hs, awayScore: as, penalties: !!penaltyWinner })
+  await set(ref(db, `teamPoints/${winner}/${round}`), { result: 'W', scored: winnerScore, conceded: loserScore })
+  await set(ref(db, `teamPoints/${loser}/${round}`),  { result: 'E', scored: loserScore, conceded: winnerScore })
   await set(ref(db, `knockoutFixtures/${fixtureId}_winner`), winner)
 }
 
@@ -48,6 +56,8 @@ async function clearKnockoutResult(fixtureId, home, away, round) {
 function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
   const [hs, setHs] = useState('')
   const [as, setAs] = useState('')
+  const [wentToPens, setWentToPens] = useState(false)
+  const [pensWinner, setPensWinner] = useState('')
   const [error, setError] = useState('')
   const homeTeam = TEAM_MAP[home]
   const awayTeam = TEAM_MAP[away]
@@ -55,14 +65,24 @@ function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
 
   function submit() {
     if (hs === '' || as === '') return
-    if (Number(hs) === Number(as)) {
-      setError('No draws in knockout — enter score after extra time')
+    const hsNum = Number(hs)
+    const asNum = Number(as)
+
+    if (hsNum === asNum && !wentToPens) {
+      setError('Scores level — tick "Decided on penalties" and pick the winner')
       return
     }
+    if (wentToPens && !pensWinner) {
+      setError('Select which team won on penalties')
+      return
+    }
+
     setError('')
-    saveKnockoutResult(fixtureId, home, away, hs, as, round)
+    saveKnockoutResult(fixtureId, home, away, hs, as, round, wentToPens ? pensWinner : null)
     setHs('')
     setAs('')
+    setWentToPens(false)
+    setPensWinner('')
   }
 
   if (!home || !away) {
@@ -87,7 +107,7 @@ function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
         <div style={s.fixtureScore}>
           {hasResult ? (
             <span style={s.fixtureScoreText}>
-              {result.homeScore} – {result.awayScore}
+              {result.homeScore} – {result.awayScore}{result.penalties ? ' (pens)' : ''}
             </span>
           ) : (
             <span style={s.fixtureVs}>vs</span>
@@ -99,27 +119,57 @@ function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
         </div>
       </div>
       {isAdmin && (
-        <div style={s.fixtureInputRow}>
+        <>
           {!hasResult ? (
             <>
-              <input type="number" min="0" max="20" value={hs}
-                onChange={e => { setHs(e.target.value); setError('') }}
-                placeholder="0" style={s.scoreInput} />
-              <span style={s.goalSep}>–</span>
-              <input type="number" min="0" max="20" value={as}
-                onChange={e => { setAs(e.target.value); setError('') }}
-                placeholder="0" style={s.scoreInput} />
-              <button style={{ ...s.miniBtn, ...s.btnW, padding: '5px 10px' }} onClick={submit}>
-                Save
-              </button>
+              <div style={s.fixtureInputRow}>
+                <input type="number" min="0" max="20" value={hs}
+                  onChange={e => { setHs(e.target.value); setError('') }}
+                  placeholder="0" style={s.scoreInput} />
+                <span style={s.goalSep}>–</span>
+                <input type="number" min="0" max="20" value={as}
+                  onChange={e => { setAs(e.target.value); setError('') }}
+                  placeholder="0" style={s.scoreInput} />
+                <button style={{ ...s.miniBtn, ...s.btnW, padding: '5px 10px' }} onClick={submit}>
+                  Save
+                </button>
+              </div>
+              <div style={s.penaltyRow}>
+                <label style={s.penaltyLabel}>
+                  <input
+                    type="checkbox"
+                    checked={wentToPens}
+                    onChange={e => { setWentToPens(e.target.checked); setError('') }}
+                  />
+                  {' '}Decided on penalties
+                </label>
+                {wentToPens && (
+                  <div style={s.penaltyChoice}>
+                    <button
+                      style={{ ...s.miniBtn, ...(pensWinner === home ? s.btnW : s.btnUndo) }}
+                      onClick={() => setPensWinner(home)}
+                    >
+                      {home} won
+                    </button>
+                    <button
+                      style={{ ...s.miniBtn, ...(pensWinner === away ? s.btnW : s.btnUndo) }}
+                      onClick={() => setPensWinner(away)}
+                    >
+                      {away} won
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           ) : (
-            <button style={{ ...s.miniBtn, ...s.btnUndo }}
-              onClick={() => clearKnockoutResult(fixtureId, home, away, round)}>
-              ↩ Clear
-            </button>
+            <div style={s.fixtureInputRow}>
+              <button style={{ ...s.miniBtn, ...s.btnUndo }}
+                onClick={() => clearKnockoutResult(fixtureId, home, away, round)}>
+                ↩ Clear
+              </button>
+            </div>
           )}
-        </div>
+        </>
       )}
       {error && <p style={{ color: '#ff6b6b', fontSize: 11, paddingLeft: 8, marginTop: 2 }}>{error}</p>}
     </div>
