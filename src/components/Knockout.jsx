@@ -23,6 +23,32 @@ const R32_FIXTURES = [
   { id: 'R32_16', home: 'Colombia',     away: 'Ghana' },
 ]
 
+// Official R16 bracket pairings
+const R16_PAIRS = [
+  ['R32_1',  'R32_4'],
+  ['R32_3',  'R32_6'],
+  ['R32_2',  'R32_5'],
+  ['R32_7',  'R32_8'],
+  ['R32_13', 'R32_11'],
+  ['R32_10', 'R32_9'],
+  ['R32_15', 'R32_14'],
+  ['R32_12', 'R32_16'],
+]
+
+// Official QF bracket pairings (winner of R16_1 vs R16_2, etc)
+const QF_PAIRS = [
+  ['R16_1', 'R16_2'],
+  ['R16_3', 'R16_4'],
+  ['R16_5', 'R16_6'],
+  ['R16_7', 'R16_8'],
+]
+
+// Official SF bracket pairings
+const SF_PAIRS = [
+  ['QF_1', 'QF_2'],
+  ['QF_3', 'QF_4'],
+]
+
 async function saveKnockoutResult(fixtureId, home, away, homeScore, awayScore, round, penaltyWinner) {
   const hs = Number(homeScore)
   const as = Number(awayScore)
@@ -32,7 +58,7 @@ async function saveKnockoutResult(fixtureId, home, away, homeScore, awayScore, r
     winner = penaltyWinner
     loser = penaltyWinner === home ? away : home
   } else {
-    if (hs === as) return // draw with no penalty winner specified - invalid
+    if (hs === as) return
     winner = hs > as ? home : away
     loser = hs > as ? away : home
   }
@@ -67,7 +93,6 @@ function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
     if (hs === '' || as === '') return
     const hsNum = Number(hs)
     const asNum = Number(as)
-
     if (hsNum === asNum && !wentToPens) {
       setError('Scores level — tick "Decided on penalties" and pick the winner')
       return
@@ -76,7 +101,6 @@ function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
       setError('Select which team won on penalties')
       return
     }
-
     setError('')
     saveKnockoutResult(fixtureId, home, away, hs, as, round, wentToPens ? pensWinner : null)
     setHs('')
@@ -177,37 +201,24 @@ function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
 }
 
 export default function Knockout({ fixtureResults, knockoutFixtures, isAdmin }) {
-  const r32Matches = R32_FIXTURES
 
-  const r16Matches = []
-  for (let i = 0; i < 8; i++) {
-    const m1 = r32Matches[i * 2]
-    const m2 = r32Matches[i * 2 + 1]
-    if (!m1 || !m2) continue
-    const home = knockoutFixtures?.[m1.id + '_winner'] || null
-    const away = knockoutFixtures?.[m2.id + '_winner'] || null
-    r16Matches.push({ id: `R16_${i + 1}`, home, away })
-  }
+  const r16Matches = R16_PAIRS.map(([a, b], i) => ({
+    id: `R16_${i + 1}`,
+    home: knockoutFixtures?.[a + '_winner'] || null,
+    away: knockoutFixtures?.[b + '_winner'] || null,
+  }))
 
-  const qfMatches = []
-  for (let i = 0; i < 4; i++) {
-    const m1 = r16Matches[i * 2]
-    const m2 = r16Matches[i * 2 + 1]
-    if (!m1 || !m2) continue
-    const home = knockoutFixtures?.[m1.id + '_winner'] || null
-    const away = knockoutFixtures?.[m2.id + '_winner'] || null
-    qfMatches.push({ id: `QF_${i + 1}`, home, away })
-  }
+  const qfMatches = QF_PAIRS.map(([a, b], i) => ({
+    id: `QF_${i + 1}`,
+    home: knockoutFixtures?.[a + '_winner'] || null,
+    away: knockoutFixtures?.[b + '_winner'] || null,
+  }))
 
-  const sfMatches = []
-  for (let i = 0; i < 2; i++) {
-    const m1 = qfMatches[i * 2]
-    const m2 = qfMatches[i * 2 + 1]
-    if (!m1 || !m2) continue
-    const home = knockoutFixtures?.[m1.id + '_winner'] || null
-    const away = knockoutFixtures?.[m2.id + '_winner'] || null
-    sfMatches.push({ id: `SF_${i + 1}`, home, away })
-  }
+  const sfMatches = SF_PAIRS.map(([a, b], i) => ({
+    id: `SF_${i + 1}`,
+    home: knockoutFixtures?.[a + '_winner'] || null,
+    away: knockoutFixtures?.[b + '_winner'] || null,
+  }))
 
   const finalMatch = {
     id: 'FINAL',
@@ -216,11 +227,11 @@ export default function Knockout({ fixtureResults, knockoutFixtures, isAdmin }) 
   }
 
   const rounds = [
-    { label: 'ROUND OF 32', matches: r32Matches, round: 'r32' },
-    { label: 'ROUND OF 16', matches: r16Matches, round: 'r16' },
-    { label: 'QUARTER-FINALS', matches: qfMatches, round: 'qf' },
-    { label: 'SEMI-FINALS', matches: sfMatches, round: 'sf' },
-    { label: 'FINAL', matches: [finalMatch], round: 'final' },
+    { label: 'ROUND OF 32',    matches: R32_FIXTURES, round: 'r32' },
+    { label: 'ROUND OF 16',    matches: r16Matches,   round: 'r16' },
+    { label: 'QUARTER-FINALS', matches: qfMatches,    round: 'qf'  },
+    { label: 'SEMI-FINALS',    matches: sfMatches,    round: 'sf'  },
+    { label: 'FINAL',          matches: [finalMatch], round: 'final' },
   ]
 
   return (
