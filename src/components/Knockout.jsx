@@ -23,42 +23,40 @@ const R32_FIXTURES = [
   { id: 'R32_16', home: 'Colombia',     away: 'Ghana' },
 ]
 
-// Official R16 bracket pairings
 const R16_PAIRS = [
-  ['R32_1',  'R32_4'],
-  ['R32_3',  'R32_6'],
-  ['R32_2',  'R32_5'],
-  ['R32_7',  'R32_8'],
-  ['R32_13', 'R32_11'],
-  ['R32_10', 'R32_9'],
-  ['R32_15', 'R32_14'],
-  ['R32_12', 'R32_16'],
+  { id: 'R16_1', a: 'R32_1',  b: 'R32_4'  },
+  { id: 'R16_2', a: 'R32_3',  b: 'R32_6'  },
+  { id: 'R16_3', a: 'R32_2',  b: 'R32_5'  },
+  { id: 'R16_4', a: 'R32_7',  b: 'R32_8'  },
+  { id: 'R16_5', a: 'R32_13', b: 'R32_11' },
+  { id: 'R16_6', a: 'R32_10', b: 'R32_9'  },
+  { id: 'R16_7', a: 'R32_15', b: 'R32_14' },
+  { id: 'R16_8', a: 'R32_12', b: 'R32_16' },
 ]
 
-// Official QF bracket pairings (winner of R16_1 vs R16_2, etc)
 const QF_PAIRS = [
-  ['R16_1', 'R16_2'],
-  ['R16_3', 'R16_4'],
-  ['R16_5', 'R16_6'],
-  ['R16_7', 'R16_8'],
+  { id: 'QF_1', a: 'R16_1', b: 'R16_2' },
+  { id: 'QF_2', a: 'R16_3', b: 'R16_4' },
+  { id: 'QF_3', a: 'R16_5', b: 'R16_6' },
+  { id: 'QF_4', a: 'R16_7', b: 'R16_8' },
 ]
 
-// Official SF bracket pairings
 const SF_PAIRS = [
-  ['QF_1', 'QF_2'],
-  ['QF_3', 'QF_4'],
+  { id: 'SF_1', a: 'QF_1', b: 'QF_3' },
+  { id: 'SF_2', a: 'QF_2', b: 'QF_4' },
 ]
 
 async function saveKnockoutResult(fixtureId, home, away, homeScore, awayScore, round, penaltyWinner) {
   const hs = Number(homeScore)
   const as = Number(awayScore)
 
+  if (hs === as && !penaltyWinner) return
+
   let winner, loser
   if (penaltyWinner) {
     winner = penaltyWinner
     loser = penaltyWinner === home ? away : home
   } else {
-    if (hs === as) return
     winner = hs > as ? home : away
     loser = hs > as ? away : home
   }
@@ -227,10 +225,10 @@ export default function Knockout({ fixtureResults, knockoutFixtures, isAdmin }) 
   }
 
   const rounds = [
-    { label: 'ROUND OF 32',    matches: R32_FIXTURES, round: 'r32' },
-    { label: 'ROUND OF 16',    matches: r16Matches,   round: 'r16' },
-    { label: 'QUARTER-FINALS', matches: qfMatches,    round: 'qf'  },
-    { label: 'SEMI-FINALS',    matches: sfMatches,    round: 'sf'  },
+    { label: 'ROUND OF 32',    matches: R32_FIXTURES, round: 'r32'   },
+    { label: 'ROUND OF 16',    matches: r16Matches,   round: 'r16'   },
+    { label: 'QUARTER-FINALS', matches: qfMatches,    round: 'qf'    },
+    { label: 'SEMI-FINALS',    matches: sfMatches,    round: 'sf'    },
     { label: 'FINAL',          matches: [finalMatch], round: 'final' },
   ]
 
