@@ -121,14 +121,13 @@ const R32_FIXTURES = [
   { id: 'R32_16', home: 'Colombia',     away: 'Ghana' },
 ]
 
-// R16 pairs based on official bracket
 const R16_PAIRS = [
-  { id: 'R16_1', a: 'R32_1', b: 'R32_4' },
-  { id: 'R16_2', a: 'R32_3', b: 'R32_6' },
-  { id: 'R16_3', a: 'R32_2', b: 'R32_5' },
-  { id: 'R16_4', a: 'R32_7', b: 'R32_8' },
+  { id: 'R16_1', a: 'R32_1',  b: 'R32_4'  },
+  { id: 'R16_2', a: 'R32_3',  b: 'R32_6'  },
+  { id: 'R16_3', a: 'R32_2',  b: 'R32_5'  },
+  { id: 'R16_4', a: 'R32_7',  b: 'R32_8'  },
   { id: 'R16_5', a: 'R32_13', b: 'R32_11' },
-  { id: 'R16_6', a: 'R32_10', b: 'R32_9' },
+  { id: 'R16_6', a: 'R32_10', b: 'R32_9'  },
   { id: 'R16_7', a: 'R32_15', b: 'R32_14' },
   { id: 'R16_8', a: 'R32_12', b: 'R32_16' },
 ]
@@ -141,12 +140,12 @@ const QF_PAIRS = [
 ]
 
 const SF_PAIRS = [
-  { id: 'SF_1', a: 'QF_1', b: 'QF_2' },
-  { id: 'SF_2', a: 'QF_3', b: 'QF_4' },
+  { id: 'SF_1', a: 'QF_1', b: 'QF_3' },
+  { id: 'SF_2', a: 'QF_2', b: 'QF_4' },
 ]
 
-function findFixture(allFixtures, home, away) {
-  return allFixtures.find(f =>
+function findFixture(fixtures, home, away) {
+  return fixtures.find(f =>
     (f.home === home && f.away === away) ||
     (f.home === away && f.away === home)
   )
@@ -173,50 +172,6 @@ async function updateTeamGroupResult(teamName, fixtureId, result, scored, conced
   await fbPut(`teamPoints/${teamName}/group`, filtered)
 }
 
-async function processKnockoutMatch(m, round, fixtures, existingFixtures, knockoutFixtures) {
-  const home = mapName(m.homeTeam?.name || '')
-  const away = mapName(m.awayTeam?.name || '')
-  const fixture = findFixture(fixtures, home, away)
-
-  if (!fixture) {
-    console.log(`No ${round} fixture match for: ${home} vs ${away}`)
-    return false
-  }
-  if (existingFixtures[fixture.id]?.homeScore !== undefined) return false
-
-  const ft = m.score?.fullTime
-  if (!ft || ft.home === null || ft.away === null) return false
-
-  let hs = ft.home
-  let as = ft.away
-  if (fixture.home === away) { hs = ft.away; as = ft.home }
-
-  // Determine winner using API's winner field (handles penalties)
-  let winner = null
-  if (m.score?.winner === 'HOME_TEAM') winner = fixture.home
-  else if (m.score?.winner === 'AWAY_TEAM') winner = fixture.away
-  else if (hs !== as) winner = hs > as ? fixture.home : fixture.away
-
-  if (!winner) {
-    console.log(`Could not determine winner for ${fixture.home} vs ${fixture.away}`)
-    return false
-  }
-
-  const loser = winner === fixture.home ? fixture.away : fixture.home
-  const winnerScore = winner === fixture.home ? hs : as
-  const loserScore = winner === fixture.home ? as : hs
-  const penalties = m.score?.winner !== null && hs === as
-
-  console.log(`Writing ${round} ${fixture.id}: ${fixture.home} ${hs}-${as} ${fixture.away} (winner: ${winner}${penalties ? ' pens' : ''})`)
-
-  await fbPut(`fixtureResults/${fixture.id}`, { homeScore: hs, awayScore: as, penalties })
-  await fbPut(`teamPoints/${winner}/${round}`, { result: 'W', scored: winnerScore, conceded: loserScore })
-  await fbPut(`teamPoints/${loser}/${round}`, { result: 'E', scored: loserScore, conceded: winnerScore })
-  await fbPut(`knockoutFixtures/${fixture.id}_winner`, winner)
-
-  return true
-}
-
 async function processGroupMatch(m, existingFixtures) {
   const home = mapName(m.homeTeam?.name || '')
   const away = mapName(m.awayTeam?.name || '')
@@ -241,39 +196,55 @@ async function processGroupMatch(m, existingFixtures) {
   return true
 }
 
-// Build R16 fixtures dynamically from R32 winners
-async function buildR16Fixtures(knockoutFixtures) {
-  return R16_PAIRS.map(p => ({
+async function processKnockoutMatch(m, round, fixtures, existingFixtures) {
+  const apiHome = mapName(m.homeTeam?.name || '')
+  const apiAway = mapName(m.awayTeam?.name || '')
+  const fixture = findFixture(fixtures, apiHome, apiAway)
+
+  if (!fixture) {
+    console.log(`No ${round} fixture: ${apiHome} vs ${apiAway}`)
+    return false
+  }
+  if (existingFixtures[fixture.id]?.homeScore !== undefined) return false
+
+  const ft = m.score?.fullTime
+  if (!ft || ft.home === null || ft.away === null) return false
+
+  let hs = ft.home
+  let as = ft.away
+  if (fixture.home === apiAway) { hs = ft.away; as = ft.home }
+
+  // Use API's winner field to correctly handle penalties
+  let winner = null
+  if (m.score?.winner === 'HOME_TEAM') winner = apiHome
+  else if (m.score?.winner === 'AWAY_TEAM') winner = apiAway
+  else if (hs !== as) winner = hs > as ? fixture.home : fixture.away
+
+  if (!winner) {
+    console.log(`Could not determine winner for ${fixture.home} vs ${fixture.away}`)
+    return false
+  }
+
+  const loser = winner === fixture.home ? fixture.away : fixture.home
+  const winnerScore = winner === fixture.home ? hs : as
+  const loserScore = winner === fixture.home ? as : hs
+  const penalties = !!(m.score?.penalties?.home !== null && m.score?.penalties !== undefined)
+
+  console.log(`Writing ${round} ${fixture.id}: ${fixture.home} ${hs}-${as} ${fixture.away} (winner: ${winner}${penalties ? ' pens' : ''})`)
+
+  await fbPut(`fixtureResults/${fixture.id}`, { homeScore: hs, awayScore: as, penalties })
+  await fbPut(`teamPoints/${winner}/${round}`, { result: 'W', scored: winnerScore, conceded: loserScore })
+  await fbPut(`teamPoints/${loser}/${round}`, { result: 'E', scored: loserScore, conceded: winnerScore })
+  await fbPut(`knockoutFixtures/${fixture.id}_winner`, winner)
+  return true
+}
+
+function buildFixtures(pairs, knockoutFixtures) {
+  return pairs.map(p => ({
     id: p.id,
     home: knockoutFixtures?.[p.a + '_winner'] || null,
     away: knockoutFixtures?.[p.b + '_winner'] || null,
   })).filter(f => f.home && f.away)
-}
-
-// Build QF fixtures dynamically from R16 winners
-async function buildQFFixtures(knockoutFixtures) {
-  return QF_PAIRS.map(p => ({
-    id: p.id,
-    home: knockoutFixtures?.[p.a + '_winner'] || null,
-    away: knockoutFixtures?.[p.b + '_winner'] || null,
-  })).filter(f => f.home && f.away)
-}
-
-// Build SF fixtures dynamically from QF winners
-async function buildSFFixtures(knockoutFixtures) {
-  return SF_PAIRS.map(p => ({
-    id: p.id,
-    home: knockoutFixtures?.[p.a + '_winner'] || null,
-    away: knockoutFixtures?.[p.b + '_winner'] || null,
-  })).filter(f => f.home && f.away)
-}
-
-// Build Final fixture from SF winners
-async function buildFinalFixture(knockoutFixtures) {
-  const home = knockoutFixtures?.['SF_1_winner'] || null
-  const away = knockoutFixtures?.['SF_2_winner'] || null
-  if (!home || !away) return null
-  return { id: 'FINAL', home, away }
 }
 
 async function main() {
@@ -298,12 +269,14 @@ async function main() {
   console.log(`Found ${matches.length} finished matches`)
 
   const existingFixtures = (await fbGet('fixtureResults')) || {}
-  const knockoutFixtures = (await fbGet('knockoutFixtures')) || {}
+  const knockoutFixtures  = (await fbGet('knockoutFixtures')) || {}
 
-  const r16Fixtures = await buildR16Fixtures(knockoutFixtures)
-  const qfFixtures = await buildQFFixtures(knockoutFixtures)
-  const sfFixtures = await buildSFFixtures(knockoutFixtures)
-  const finalFixture = await buildFinalFixture(knockoutFixtures)
+  const r16Fixtures = buildFixtures(R16_PAIRS, knockoutFixtures)
+  const qfFixtures  = buildFixtures(QF_PAIRS,  knockoutFixtures)
+  const sfFixtures  = buildFixtures(SF_PAIRS,  knockoutFixtures)
+  const finalHome   = knockoutFixtures?.['SF_1_winner'] || null
+  const finalAway   = knockoutFixtures?.['SF_2_winner'] || null
+  const finalFixtures = finalHome && finalAway ? [{ id: 'FINAL', home: finalHome, away: finalAway }] : []
 
   let written = 0
 
@@ -314,17 +287,15 @@ async function main() {
     if (stage === 'GROUP_STAGE') {
       success = await processGroupMatch(m, existingFixtures)
     } else if (stage === 'LAST_32' || stage === 'ROUND_OF_32') {
-      success = await processKnockoutMatch(m, 'r32', R32_FIXTURES, existingFixtures, knockoutFixtures)
+      success = await processKnockoutMatch(m, 'r32', R32_FIXTURES, existingFixtures)
     } else if (stage === 'LAST_16' || stage === 'ROUND_OF_16') {
-      success = await processKnockoutMatch(m, 'r16', r16Fixtures, existingFixtures, knockoutFixtures)
+      success = await processKnockoutMatch(m, 'r16', r16Fixtures, existingFixtures)
     } else if (stage === 'QUARTER_FINALS') {
-      success = await processKnockoutMatch(m, 'qf', qfFixtures, existingFixtures, knockoutFixtures)
+      success = await processKnockoutMatch(m, 'qf', qfFixtures, existingFixtures)
     } else if (stage === 'SEMI_FINALS') {
-      success = await processKnockoutMatch(m, 'sf', sfFixtures, existingFixtures, knockoutFixtures)
+      success = await processKnockoutMatch(m, 'sf', sfFixtures, existingFixtures)
     } else if (stage === 'FINAL') {
-      if (finalFixture) {
-        success = await processKnockoutMatch(m, 'final', [finalFixture], existingFixtures, knockoutFixtures)
-      }
+      success = await processKnockoutMatch(m, 'final', finalFixtures, existingFixtures)
     }
 
     if (success) written++
