@@ -200,22 +200,22 @@ function KnockoutMatchRow({ fixtureId, home, away, round, result, isAdmin }) {
 
 export default function Knockout({ fixtureResults, knockoutFixtures, isAdmin }) {
 
-  const r16Matches = R16_PAIRS.map(([a, b], i) => ({
+  const r16Matches = R16_PAIRS.map((p, i) => ({
     id: `R16_${i + 1}`,
-    home: knockoutFixtures?.[a + '_winner'] || null,
-    away: knockoutFixtures?.[b + '_winner'] || null,
+    home: knockoutFixtures?.[p.a + '_winner'] || null,
+    away: knockoutFixtures?.[p.b + '_winner'] || null,
   }))
 
-  const qfMatches = QF_PAIRS.map(([a, b], i) => ({
+  const qfMatches = QF_PAIRS.map((p, i) => ({
     id: `QF_${i + 1}`,
-    home: knockoutFixtures?.[a + '_winner'] || null,
-    away: knockoutFixtures?.[b + '_winner'] || null,
+    home: knockoutFixtures?.[p.a + '_winner'] || null,
+    away: knockoutFixtures?.[p.b + '_winner'] || null,
   }))
 
-  const sfMatches = SF_PAIRS.map(([a, b], i) => ({
+  const sfMatches = SF_PAIRS.map((p, i) => ({
     id: `SF_${i + 1}`,
-    home: knockoutFixtures?.[a + '_winner'] || null,
-    away: knockoutFixtures?.[b + '_winner'] || null,
+    home: knockoutFixtures?.[p.a + '_winner'] || null,
+    away: knockoutFixtures?.[p.b + '_winner'] || null,
   }))
 
   const finalMatch = {
